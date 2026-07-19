@@ -458,11 +458,9 @@
   }
 
   /* ---------- Booking ---------- */
-  .booking-inner{
-    display:grid;
-    grid-template-columns:1.2fr 1fr;
-    gap:72px;
-    align-items:start;
+  .booking-left{
+    max-width:640px;
+    margin:0 auto;
   }
   .booking-left h3{
     font-size:15px;
@@ -486,11 +484,17 @@
     width:6px;height:1px;
     background:var(--gold-deep);
   }
+  .reserve-section{
+    background:var(--bg-skin);
+  }
   .booking-cta{
+    max-width:460px;
+    margin:0 auto;
     display:flex;
     flex-direction:column;
     gap:18px;
-    align-items:flex-start;
+    align-items:center;
+    text-align:center;
   }
   .booking-cta p{
     font-size:13px;
@@ -654,7 +658,6 @@
   }
 
   @media (max-width: 860px){
-    .booking-inner{grid-template-columns:1fr;gap:56px;}
   }
 
   @media (max-width: 720px){
@@ -670,7 +673,7 @@
       overflow:hidden;
       transition:max-height 0.4s ease;
     }
-    .nav-links.open{max-height:320px;}
+    .nav-links.open{max-height:400px;}
     .nav-links a{
       width:100%;
       text-align:center;
@@ -683,7 +686,7 @@
     .price-row .amount{margin-left:0;}
     .qr-block{gap:28px;padding:24px 20px;margin-top:32px;justify-content:center;}
     .qr-item img{width:112px;height:112px;}
-    #booking{padding-bottom:140px;}
+    #reserve{padding-bottom:140px;}
   }
 </style>
 </head>
@@ -697,6 +700,7 @@
       <a href="#service">服務項目</a>
       <a href="#guides">美學分享</a>
       <a href="#booking">預約須知</a>
+      <a href="#reserve">開始預約</a>
     </div>
     <button class="nav-toggle" id="navToggle" aria-label="開啟選單">
       <span></span><span></span><span></span>
@@ -715,7 +719,7 @@
     超過15年彩妝與形象顧問底蘊，專注於骨相美學與精緻質感的服務體驗，
     為每一位客人量身勾勒最自然的高級感。
   </p>
-  <a href="#booking" class="btn-ghost reveal">立即預約</a>
+  <a href="#reserve" class="btn-ghost reveal">立即預約</a>
   <div class="hero-line"></div>
 </section>
 
@@ -871,7 +875,7 @@
 </section>
 
 <section id="booking">
-  <div class="container booking-inner">
+  <div class="container">
     <div class="booking-left reveal">
       <div class="section-eyebrow">BOOKING NOTES</div>
       <h3 style="font-family:'Noto Serif TC', serif; font-size:22px; margin:16px 0 28px;">預約須知</h3>
@@ -892,7 +896,11 @@
         </div>
       </div>
     </div>
+  </div>
+</section>
 
+<section id="reserve" class="reserve-section">
+  <div class="container">
     <div class="booking-cta reveal">
       <div class="section-eyebrow">RESERVE YOUR DATE</div>
       <h3 style="font-family:'Noto Serif TC', serif; font-size:22px; margin:16px 0 8px;">開始預約</h3>
@@ -918,7 +926,7 @@
     <div class="blog-media" id="blogMedia"></div>
     <div class="blog-body" id="blogBody"></div>
     <div class="blog-footer">
-      <a href="#booking" class="btn-solid" id="blogCta">立即預約</a>
+      <a href="#reserve" class="btn-solid" id="blogCta">立即預約</a>
     </div>
   </div>
 </div>
