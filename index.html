@@ -660,7 +660,7 @@
     超過15年彩妝與形象顧問底蘊，專注於骨相美學與精緻質感的服務體驗，
     為每一位客人量身勾勒最自然的高級感。
   </p>
-  <a href="https://docs.google.com/forms/d/e/1FAIpQLSfP8E4SW84sHKdHrIOgbGTBTYzrwk4-klwyuduUmoFP_Qxbnw/viewform?usp=publish-editor" class="btn-ghost reveal">立即預約</a>
+  <a href="#booking" class="btn-ghost reveal">立即預約</a>
   <div class="hero-line"></div>
 </section>
 
@@ -851,7 +851,7 @@
     <div class="blog-media" id="blogMedia"></div>
     <div class="blog-body" id="blogBody"></div>
     <div class="blog-footer">
-      <a href="https://docs.google.com/forms/d/e/1FAIpQLSfP8E4SW84sHKdHrIOgbGTBTYzrwk4-klwyuduUmoFP_Qxbnw/viewform?usp=publish-editor" class="btn-solid" id="blogCta">立即預約</a>
+      <a href="#booking" class="btn-solid" id="blogCta">立即預約</a>
     </div>
   </div>
 </div>
@@ -1046,18 +1046,26 @@
 
   blogBack.addEventListener('click', () => showMain(true, '#guides'));
 
-  // All internal hash links: works whether we're on the main page or a blog article
+  // All internal hash links: always compute the scroll target live via JS
+  // (native browser anchor-jump can land short if it fires before the
+  // Chinese web fonts finish loading and reflow the page)
   document.querySelectorAll('a[href^="#"]').forEach(link => {
     link.addEventListener('click', (e) => {
       const hash = link.getAttribute('href');
       if(!hash || hash.length < 2) return;
+      e.preventDefault();
+
+      const goTo = () => {
+        const target = document.getElementById(hash.slice(1));
+        if(target) target.scrollIntoView({ behavior:'smooth', block:'start' });
+        history.pushState({}, '', hash);
+      };
 
       if(blogView.classList.contains('is-active')){
-        e.preventDefault();
         showMain(false, hash);
-        history.pushState({}, '', hash);
+      } else {
+        goTo();
       }
-      // If already on the main page, let the browser's native smooth-scroll handle it.
     });
   });
 
