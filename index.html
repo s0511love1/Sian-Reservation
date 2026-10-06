@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- ============================================================
      SIAN STUDIO 嫻美學 · 官方網頁（WEB）
-     版本：WEB-A1｜Sian-Reservation A1版          日期：2026-10-06
+     版本：WEB-A1.1｜Sian-Reservation A1.1版          日期：2026-10-06
      🔴 部署檔名必須改回：index.html
      Repo：Sian-Reservation   →   https://sian-reservation.vercel.app/
      知識庫：SIAN-WEB_規格.md
@@ -683,6 +683,9 @@
   .sc-l .short{display:none;}
   .sc-open{border-color:var(--gold);}
   .sc-open .sc-l{color:var(--gold-deep);}
+  /* 即將滿檔（WEB-A1.1）：還有空檔但當天已有佔用 → 暖奶茶底，讓客人一眼看出時段正在被預約 */
+  .sc-hot{background:#F3E1CE;border-color:#D4A57C;}
+  .sc-hot .sc-l{color:#8E5A35;font-weight:600;}
   .sc-booked{background:var(--gold-deep);border-color:var(--gold-deep);color:var(--white);}
   .sc-booked .sc-l{color:rgba(255,255,255,0.92);}
   .sc-inquiry{background:rgba(197,179,154,0.16);border:1px dashed var(--gold-deep);}
@@ -699,6 +702,7 @@
   .sc-legend span{display:inline-flex;align-items:center;gap:6px;}
   .sc-sw{width:14px;height:14px;border-radius:2px;border:1px solid var(--line);display:inline-block;}
   .sc-sw.sc-open{background:var(--white);border-color:var(--gold);}
+  .sc-sw.sc-hot{background:#F3E1CE;border-color:#D4A57C;}
   .sc-sw.sc-booked{background:var(--gold-deep);border-color:var(--gold-deep);}
   .sc-sw.sc-inquiry{background:rgba(197,179,154,0.16);border:1px dashed var(--gold-deep);}
   .sc-sw.sc-closed{background:repeating-linear-gradient(135deg,#F3F1EE 0 3px,#E0DBD3 3px 4px);}
@@ -714,6 +718,7 @@
   .sc-pop-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px;}
   .sc-pop-date{font-family:'Noto Serif TC', serif;font-size:17px;letter-spacing:0.08em;font-weight:600;}
   .sc-chip{display:inline-block;margin-top:6px;font-size:11px;letter-spacing:0.1em;padding:3px 10px;border-radius:20px;border:1px solid var(--gold);color:var(--gold-deep);}
+  .sc-chip.sc-hot{background:#F3E1CE;border-color:#D4A57C;color:#8E5A35;}
   .sc-chip.sc-booked{background:var(--gold-deep);border-color:var(--gold-deep);color:var(--white);}
   .sc-chip.sc-closed{border-color:var(--line);color:var(--ink-soft);background:#F3F1EE;}
   .sc-chip.sc-inquiry{border-style:dashed;}
@@ -979,6 +984,7 @@
       <div class="sc-status" id="scStatus" aria-live="polite"></div>
       <div class="sc-legend">
         <span><i class="sc-sw sc-open"></i>可預約</span>
+        <span><i class="sc-sw sc-hot"></i>即將滿檔</span>
         <span><i class="sc-sw sc-inquiry"></i>洽詢溝通中</span>
         <span><i class="sc-sw sc-booked"></i>預約滿檔</span>
         <span><i class="sc-sw sc-closed"></i>行程滿檔</span>
@@ -1309,16 +1315,21 @@
     base: 'https://docs.google.com/forms/d/e/1FAIpQLSfP8E4SW84sHKdHrIOgbGTBTYzrwk4-klwyuduUmoFP_Qxbnw/viewform',
     // 表單定稿後，把各題的 entry 編號填進來（表單編輯器 →「取得預先填入的連結」可查到，例如 'entry.123456789'）
     // 留空 = 不預填，直接開啟表單
-    prefill: { date: '', time: '', service: '' }
+    prefill: { date: '', time: '', service: '' },
+    // 預填管線測試（WEB-A1.1）：官網網址加上 ?prefilltest=1 才會改用這組假編號，一般客人的連結不受影響
+    // 第 9 批填入真實 entry 編號後，可把這組與 PREFILL_TEST 一起移除
+    testPrefill: { date: 'entry.date', time: 'entry.time', service: 'entry.service' }
   };
+  const PREFILL_TEST = /[?&]prefilltest=1(?:&|$)/.test((typeof location !== 'undefined' && location.search) || '');
 
   function buildBookingUrl(opts) {
     const o = opts || {};
     const params = [];
     const add = (entry, value) => { if (entry && value) params.push(encodeURIComponent(entry) + '=' + encodeURIComponent(value)); };
-    add(BOOKING_FORM.prefill.date, o.date);
-    add(BOOKING_FORM.prefill.time, o.time);
-    add(BOOKING_FORM.prefill.service, o.service);
+    const pf = PREFILL_TEST ? BOOKING_FORM.testPrefill : BOOKING_FORM.prefill;
+    add(pf.date, o.date);
+    add(pf.time, o.time);
+    add(pf.service, o.service);
     return params.length ? BOOKING_FORM.base + '?usp=pp_url&' + params.join('&') : BOOKING_FORM.base;
   }
 
@@ -1334,8 +1345,10 @@
     const bridalBtn = document.getElementById('scBridalBtn');
 
     const WD = ['日', '一', '二', '三', '四', '五', '六'];
-    const LABEL = { open: '可預約', booked: '預約滿檔', inquiry: '洽詢溝通中', closed: '行程滿檔', past: '', loading: '' };
-    const SHORT = { open: '可約', booked: '約滿', inquiry: '洽詢', closed: '滿檔', past: '', loading: '' };
+    const LABEL = { open: '可預約', hot: '即將滿檔', booked: '預約滿檔', inquiry: '洽詢溝通中', closed: '行程滿檔', past: '', loading: '' };
+    const SHORT = { open: '可約', hot: '將滿', booked: '約滿', inquiry: '洽詢', closed: '滿檔', past: '', loading: '' };
+    // 顯示狀態：後端回 open 且當天已有任何佔用（已預約／洽詢中／老師部分時段不接單）→ 即將滿檔
+    const viewState = (info) => (info.s === 'open' && (info.i || []).length ? 'hot' : info.s);
     const ITEM_LABEL = { booked: '已預約', inquiry: '洽詢溝通中', closed: '行程滿檔' };
     const INITIAL_MONTHS = 6, MORE_MONTHS = 3;
     const state = { days: {}, loaded: {}, pending: {}, minYm: '', view: '', error: '', started: false, openDate: '' };
@@ -1393,7 +1406,7 @@
       for (let d = 1; d <= dim; d++) {
         const date = ym + '-' + pad(d);
         const info = state.days[date];
-        const s = info ? info.s : (loaded ? 'past' : 'loading');
+        const s = info ? viewState(info) : (loaded ? 'past' : 'loading');
         const off = s === 'past' || s === 'loading';
         const mark = info && info.b ? '<i class="sc-bmark" title="新秘可安排"></i>' : '';
         html += '<button type="button" class="sc-cell sc-' + s + '" data-date="' + date + '"' + (off ? ' disabled' : '') +
@@ -1431,7 +1444,7 @@
     function popoverHtml(date, info) {
       const s = info.s;
       let h = '<div class="sc-pop-head"><div><div class="sc-pop-date" id="scPopTitle">' + dayTitle(date) + '</div>' +
-        '<span class="sc-chip sc-' + s + '">' + esc(LABEL[s] || '') + '</span></div>' +
+        '<span class="sc-chip sc-' + viewState(info) + '">' + esc(LABEL[viewState(info)] || '') + '</span></div>' +
         '<button type="button" class="sc-x" data-sc-close aria-label="關閉">×</button></div>';
       const items = info.i || [];
       if (items.length) {
