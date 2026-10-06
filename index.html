@@ -1,4 +1,13 @@
 <!DOCTYPE html>
+<!-- ============================================================
+     SIAN STUDIO 嫻美學 · 官方網頁（WEB）
+     版本：WEB-A1｜Sian-Reservation A1版          日期：2026-10-06
+     🔴 部署檔名必須改回：index.html
+     Repo：Sian-Reservation   →   https://sian-reservation.vercel.app/
+     知識庫：SIAN-WEB_規格.md
+     🔴 預約 CTA 目前指向 Google 表單；BOOK 上線後要改這裡（含檔期查詢的 BOOKING_FORM）
+     🔴 檔期查詢呼叫 Apps Script 公開動作 getAvailability（不帶、也不可帶 SECRET_KEY）
+     ============================================================ -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
@@ -653,6 +662,78 @@
     display:flex;
   }
 
+  /* ---------- Schedule（WEB-A1 檔期查詢）---------- */
+  .schedule{background:var(--bg-pearl);}
+  .sc-intro{font-size:14px;color:var(--ink-soft);max-width:560px;margin:28px auto 0;line-height:1.9;}
+  .sc-card{max-width:760px;margin:0 auto;background:var(--white);border:1px solid var(--line);border-radius:4px;padding:28px 28px 22px;box-shadow:0 18px 40px -30px rgba(74,68,60,0.25);}
+  .sc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+  .sc-month{font-family:'Noto Serif TC', serif;font-size:18px;letter-spacing:0.12em;font-weight:600;}
+  .sc-nav{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--bg-skin);color:var(--gold-deep);font-size:20px;line-height:1;cursor:pointer;transition:background 0.3s ease,color 0.3s ease;}
+  .sc-nav:hover:not(:disabled){background:var(--gold);color:var(--white);}
+  .sc-nav:disabled{opacity:0.3;cursor:default;}
+  .sc-week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px;}
+  .sc-week span{text-align:center;font-size:12px;letter-spacing:0.12em;color:var(--ink-soft);padding:4px 0;}
+  .sc-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+  .sc-cell{position:relative;min-height:72px;border-radius:3px;border:1px solid var(--line);background:var(--white);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px 2px;font-family:'Noto Sans TC', sans-serif;color:var(--ink);cursor:pointer;transition:transform 0.25s ease,box-shadow 0.25s ease,border-color 0.25s ease;}
+  .sc-cell:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 10px 22px -16px rgba(74,68,60,0.45);}
+  .sc-cell:focus-visible{outline:2px solid var(--gold-deep);outline-offset:2px;}
+  .sc-empty{border:none;background:transparent;cursor:default;}
+  .sc-d{font-family:'Noto Serif TC', serif;font-size:16px;font-weight:600;line-height:1;}
+  .sc-l{font-size:11px;letter-spacing:0.04em;line-height:1.2;}
+  .sc-l .short{display:none;}
+  .sc-open{border-color:var(--gold);}
+  .sc-open .sc-l{color:var(--gold-deep);}
+  .sc-booked{background:var(--gold-deep);border-color:var(--gold-deep);color:var(--white);}
+  .sc-booked .sc-l{color:rgba(255,255,255,0.92);}
+  .sc-inquiry{background:rgba(197,179,154,0.16);border:1px dashed var(--gold-deep);}
+  .sc-inquiry .sc-l{color:var(--gold-deep);}
+  .sc-closed{background:repeating-linear-gradient(135deg,#F3F1EE 0 6px,#E9E5DF 6px 8px);color:var(--ink-soft);}
+  .sc-past{opacity:0.32;cursor:default;}
+  .sc-loading{cursor:default;color:var(--ink-soft);background:linear-gradient(90deg,#F7F5F1,#FDFBF7,#F7F5F1);background-size:200% 100%;animation:scShimmer 1.4s ease infinite;}
+  @keyframes scShimmer{to{background-position:-200% 0;}}
+  .sc-bmark{position:absolute;top:4px;right:5px;width:6px;height:6px;border-radius:50%;background:var(--gold-deep);}
+  .sc-booked .sc-bmark{background:var(--white);}
+  .sc-status{min-height:22px;margin-top:14px;font-size:13px;color:var(--ink-soft);text-align:center;}
+  .sc-status button{margin-left:8px;background:none;border:none;border-bottom:1px solid var(--gold-deep);color:var(--gold-deep);font:inherit;cursor:pointer;padding:0;}
+  .sc-legend{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;margin-top:12px;font-size:12px;color:var(--ink-soft);}
+  .sc-legend span{display:inline-flex;align-items:center;gap:6px;}
+  .sc-sw{width:14px;height:14px;border-radius:2px;border:1px solid var(--line);display:inline-block;}
+  .sc-sw.sc-open{background:var(--white);border-color:var(--gold);}
+  .sc-sw.sc-booked{background:var(--gold-deep);border-color:var(--gold-deep);}
+  .sc-sw.sc-inquiry{background:rgba(197,179,154,0.16);border:1px dashed var(--gold-deep);}
+  .sc-sw.sc-closed{background:repeating-linear-gradient(135deg,#F3F1EE 0 3px,#E0DBD3 3px 4px);}
+  .sc-sw.sc-bdot{width:6px;height:6px;border-radius:50%;background:var(--gold-deep);border:none;}
+  .sc-bridal{max-width:760px;margin:28px auto 0;display:flex;align-items:center;justify-content:space-between;gap:24px;padding:22px 28px;background:var(--bg-skin);border:1px solid var(--line);border-radius:4px;}
+  .sc-bridal strong{display:block;font-family:'Noto Serif TC', serif;font-size:16px;letter-spacing:0.08em;margin-bottom:4px;font-weight:600;}
+  .sc-bridal span{font-size:13px;color:var(--ink-soft);}
+  .sc-bridal .btn-solid{flex-shrink:0;}
+  /* 氣泡框：position:fixed 且放在所有 .reveal 之外（transform 祖先會讓 fixed 失效） */
+  .sc-backdrop{position:fixed;inset:0;z-index:180;background:transparent;}
+  .sc-pop{position:fixed;z-index:190;width:340px;max-width:calc(100vw - 24px);max-height:min(72vh,560px);overflow-y:auto;background:var(--white);border:1px solid var(--line);border-radius:6px;box-shadow:0 24px 50px -20px rgba(74,68,60,0.35);padding:22px 22px 20px;-webkit-user-select:none;user-select:none;}
+  .sc-pop[hidden],.sc-backdrop[hidden]{display:none;}
+  .sc-pop-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px;}
+  .sc-pop-date{font-family:'Noto Serif TC', serif;font-size:17px;letter-spacing:0.08em;font-weight:600;}
+  .sc-chip{display:inline-block;margin-top:6px;font-size:11px;letter-spacing:0.1em;padding:3px 10px;border-radius:20px;border:1px solid var(--gold);color:var(--gold-deep);}
+  .sc-chip.sc-booked{background:var(--gold-deep);border-color:var(--gold-deep);color:var(--white);}
+  .sc-chip.sc-closed{border-color:var(--line);color:var(--ink-soft);background:#F3F1EE;}
+  .sc-chip.sc-inquiry{border-style:dashed;}
+  .sc-x{background:none;border:none;font-size:22px;line-height:1;color:var(--ink-soft);cursor:pointer;padding:2px 4px;}
+  .sc-items{list-style:none;margin:0 0 14px;padding:0;border-top:1px solid var(--line);}
+  .sc-items li{display:flex;align-items:center;gap:8px;font-size:13px;padding:9px 0;border-bottom:1px dashed var(--line);}
+  .sc-items .sc-t{margin-left:auto;color:var(--ink-soft);font-size:12px;white-space:nowrap;}
+  .sc-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--gold-deep);}
+  .sc-dot.sc-inquiry{background:transparent;border:1px dashed var(--gold-deep);}
+  .sc-dot.sc-closed{background:#C9C2B8;}
+  .sc-sec{font-size:11px;letter-spacing:0.25em;color:var(--gold-deep);margin:4px 0 8px;}
+  .sc-group{margin-bottom:12px;}
+  .sc-svc{font-size:12px;color:var(--ink-soft);margin-bottom:6px;line-height:1.6;}
+  .sc-times{display:flex;flex-wrap:wrap;gap:6px;}
+  .sc-tchip{display:inline-block;font-size:12px;padding:5px 10px;border:1px solid var(--gold);border-radius:2px;color:var(--ink);transition:background 0.25s ease,color 0.25s ease;}
+  .sc-tchip:hover{background:var(--gold);color:var(--white);}
+  .sc-note{font-size:12px;color:var(--ink-soft);line-height:1.8;margin:2px 0 12px;}
+  .sc-pop .btn-solid{width:100%;text-align:center;padding:14px 20px;margin-top:4px;}
+  .sc-cta{position:sticky;bottom:-20px;margin:0 -22px -20px;padding:12px 22px 20px;background:linear-gradient(rgba(255,255,255,0),var(--white) 28%);}
+
   @media (max-width: 860px){
     .booking-inner{grid-template-columns:1fr;gap:56px;}
   }
@@ -684,6 +765,16 @@
     .qr-block{gap:28px;padding:24px 20px;margin-top:32px;justify-content:center;}
     .qr-item img{width:112px;height:112px;}
     #booking{padding-bottom:140px;}
+    .sc-card{padding:18px 12px 16px;}
+    .sc-grid,.sc-week{gap:4px;}
+    .sc-cell{min-height:54px;padding:4px 1px;}
+    .sc-d{font-size:14px;}
+    .sc-l{font-size:10px;}
+    .sc-l .full{display:none;}
+    .sc-l .short{display:inline;}
+    .sc-bridal{flex-direction:column;align-items:stretch;text-align:center;padding:20px;}
+    .sc-backdrop{background:rgba(74,68,60,0.28);}
+    .sc-pop{left:0 !important;right:0;top:auto !important;bottom:0;width:100%;max-width:100%;max-height:78vh;border-radius:14px 14px 0 0;padding:20px 20px calc(24px + env(safe-area-inset-bottom,0px));}
   }
 </style>
 </head>
@@ -696,6 +787,7 @@
       <a href="#about">關於嫻美學</a>
       <a href="#service">服務項目</a>
       <a href="#guides">美學分享</a>
+      <a href="#schedule">檔期查詢</a>
       <a href="#booking">預約須知</a>
     </div>
     <button class="nav-toggle" id="navToggle" aria-label="開啟選單">
@@ -868,6 +960,38 @@
   <p class="guide-hint reveal">← 左右滑動探索更多 →</p>
 </section>
 
+<section class="schedule" id="schedule">
+  <div class="container">
+    <div class="section-head" style="margin-bottom:48px;">
+      <div class="section-eyebrow reveal">AVAILABILITY</div>
+      <h2 class="reveal">檔期查詢</h2>
+      <div class="divider reveal"></div>
+      <p class="sc-intro reveal">點選日期即可查看可預約時段。新娘秘書服務依婚禮流程另約時間，即使顯示滿檔也歡迎諮詢。</p>
+    </div>
+    <div class="sc-card reveal">
+      <div class="sc-head">
+        <button type="button" class="sc-nav" id="scPrev" aria-label="上個月">‹</button>
+        <div class="sc-month" id="scMonth">檔期載入中</div>
+        <button type="button" class="sc-nav" id="scNext" aria-label="下個月">›</button>
+      </div>
+      <div class="sc-week"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
+      <div class="sc-grid" id="scGrid"></div>
+      <div class="sc-status" id="scStatus" aria-live="polite"></div>
+      <div class="sc-legend">
+        <span><i class="sc-sw sc-open"></i>可預約</span>
+        <span><i class="sc-sw sc-inquiry"></i>洽詢溝通中</span>
+        <span><i class="sc-sw sc-booked"></i>預約滿檔</span>
+        <span><i class="sc-sw sc-closed"></i>行程滿檔</span>
+        <span><i class="sc-sw sc-bdot"></i>新秘可安排</span>
+      </div>
+    </div>
+    <div class="sc-bridal reveal">
+      <div><strong>新娘秘書專屬諮詢</strong><span>婚禮檔期依流程與場次另約，任何日期都可以先詢問</span></div>
+      <a class="btn-solid" id="scBridalBtn" href="https://docs.google.com/forms/d/e/1FAIpQLSfP8E4SW84sHKdHrIOgbGTBTYzrwk4-klwyuduUmoFP_Qxbnw/viewform" target="_blank" rel="noopener">新秘專屬諮詢</a>
+    </div>
+  </div>
+</section>
+
 <section id="booking">
   <div class="container booking-inner">
     <div class="booking-left reveal">
@@ -906,6 +1030,10 @@
   <p>© SIAN STUDIO 嫻美學．All Rights Reserved.</p>
 </footer>
 </main>
+
+<!-- WEB-A1：檔期氣泡框（刻意放在 main 與所有 .reveal 之外） -->
+<div class="sc-backdrop" id="scBackdrop" hidden></div>
+<div class="sc-pop" id="scPop" role="dialog" aria-modal="true" aria-labelledby="scPopTitle" hidden></div>
 
 <div id="blogView" class="blog-view">
   <div class="container blog-container">
@@ -1170,6 +1298,246 @@
     const match = location.hash.match(/^#blog=(\d+)/);
     if(match) showBlog(match[1], false);
   });
+
+  // ============================================================
+  // 檔期查詢（WEB-A1）
+  //   資料：Apps Script 公開動作 getAvailability（唯讀、去識別化、不帶金鑰）
+  //   載入：進入區段附近才載入「當月＋未來 5 個月」，翻到未載入的月份再按需載入 3 個月
+  // ============================================================
+  const SIAN_API_URL = 'https://script.google.com/macros/s/AKfycbwQyfZDecV_vkAuI75dmVUEbasYe4LJzAGLGtFsfU4hz-2NRbXXS4q0lJmm3keFlPzoIg/exec';
+  const BOOKING_FORM = {
+    base: 'https://docs.google.com/forms/d/e/1FAIpQLSfP8E4SW84sHKdHrIOgbGTBTYzrwk4-klwyuduUmoFP_Qxbnw/viewform',
+    // 表單定稿後，把各題的 entry 編號填進來（表單編輯器 →「取得預先填入的連結」可查到，例如 'entry.123456789'）
+    // 留空 = 不預填，直接開啟表單
+    prefill: { date: '', time: '', service: '' }
+  };
+
+  function buildBookingUrl(opts) {
+    const o = opts || {};
+    const params = [];
+    const add = (entry, value) => { if (entry && value) params.push(encodeURIComponent(entry) + '=' + encodeURIComponent(value)); };
+    add(BOOKING_FORM.prefill.date, o.date);
+    add(BOOKING_FORM.prefill.time, o.time);
+    add(BOOKING_FORM.prefill.service, o.service);
+    return params.length ? BOOKING_FORM.base + '?usp=pp_url&' + params.join('&') : BOOKING_FORM.base;
+  }
+
+  (function setupSchedule() {
+    const grid = document.getElementById('scGrid');
+    if (!grid) return;
+    const monthEl = document.getElementById('scMonth');
+    const prevBtn = document.getElementById('scPrev');
+    const nextBtn = document.getElementById('scNext');
+    const statusEl = document.getElementById('scStatus');
+    const pop = document.getElementById('scPop');
+    const backdrop = document.getElementById('scBackdrop');
+    const bridalBtn = document.getElementById('scBridalBtn');
+
+    const WD = ['日', '一', '二', '三', '四', '五', '六'];
+    const LABEL = { open: '可預約', booked: '預約滿檔', inquiry: '洽詢溝通中', closed: '行程滿檔', past: '', loading: '' };
+    const SHORT = { open: '可約', booked: '約滿', inquiry: '洽詢', closed: '滿檔', past: '', loading: '' };
+    const ITEM_LABEL = { booked: '已預約', inquiry: '洽詢溝通中', closed: '行程滿檔' };
+    const INITIAL_MONTHS = 6, MORE_MONTHS = 3;
+    const state = { days: {}, loaded: {}, pending: {}, minYm: '', view: '', error: '', started: false, openDate: '' };
+
+    const pad = (n) => String(n).padStart(2, '0');
+    const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const ymAdd = (ym, n) => { let y = +ym.slice(0, 4), m = +ym.slice(5, 7) + n; while (m > 12) { m -= 12; y++; } while (m < 1) { m += 12; y--; } return y + '-' + pad(m); };
+    function taipeiYm() {
+      const now = new Date();
+      const tp = new Date(now.getTime() + (now.getTimezoneOffset() + 480) * 60000);
+      return tp.getFullYear() + '-' + pad(tp.getMonth() + 1);
+    }
+
+    if (bridalBtn) bridalBtn.href = buildBookingUrl({ service: '新娘秘書' });
+
+    function fetchRange(from, months) {
+      const covered = [];
+      for (let i = 0; i < months; i++) covered.push(ymAdd(from, i));
+      const p = (async () => {
+        const url = SIAN_API_URL + '?p=' + encodeURIComponent(JSON.stringify({ action: 'getAvailability', from: from, months: months }));
+        const res = await fetch(url, { method: 'GET', redirect: 'follow' });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || '檔期資料錯誤');
+        Object.keys(data.days || {}).forEach((d) => { state.days[d] = data.days[d]; });
+        (data.loaded || []).forEach((m) => { state.loaded[m] = true; });
+        return data;
+      })();
+      covered.forEach((m) => { if (!state.pending[m]) state.pending[m] = p; });
+      const clear = () => covered.forEach((m) => { if (state.pending[m] === p) delete state.pending[m]; });
+      p.then(clear, clear);
+      return p;
+    }
+
+    async function ensureMonth(ym) {
+      if (state.loaded[ym]) return;
+      if (state.pending[ym]) { try { await state.pending[ym]; } catch (e) {} }
+      if (!state.loaded[ym]) await fetchRange(ym, MORE_MONTHS);
+    }
+
+    function prefetchAhead(ym) {
+      const next = ymAdd(ym, 1);
+      if (!state.loaded[next] && !state.pending[next]) fetchRange(next, MORE_MONTHS).catch(() => {});
+    }
+
+    function render() {
+      const ym = state.view;
+      const y = +ym.slice(0, 4), m = +ym.slice(5, 7);
+      monthEl.textContent = y + ' 年 ' + m + ' 月';
+      prevBtn.disabled = ym <= state.minYm;
+      const first = new Date(y, m - 1, 1).getDay();
+      const dim = new Date(y, m, 0).getDate();
+      const loaded = !!state.loaded[ym];
+      let html = '';
+      for (let i = 0; i < first; i++) html += '<div class="sc-cell sc-empty" aria-hidden="true"></div>';
+      for (let d = 1; d <= dim; d++) {
+        const date = ym + '-' + pad(d);
+        const info = state.days[date];
+        const s = info ? info.s : (loaded ? 'past' : 'loading');
+        const off = s === 'past' || s === 'loading';
+        const mark = info && info.b ? '<i class="sc-bmark" title="新秘可安排"></i>' : '';
+        html += '<button type="button" class="sc-cell sc-' + s + '" data-date="' + date + '"' + (off ? ' disabled' : '') +
+          ' aria-label="' + m + '月' + d + '日 ' + (LABEL[s] || '') + '">' + mark +
+          '<span class="sc-d">' + d + '</span>' +
+          '<span class="sc-l"><span class="full">' + (LABEL[s] || '') + '</span><span class="short">' + (SHORT[s] || '') + '</span></span></button>';
+      }
+      grid.innerHTML = html;
+      if (state.error) {
+        statusEl.innerHTML = esc(state.error) + '<button type="button" id="scRetry">重新載入</button>';
+      } else {
+        statusEl.textContent = loaded ? '' : '檔期載入中…';
+      }
+    }
+
+    async function showMonth(ym) {
+      state.view = ym;
+      state.error = '';
+      render();
+      try {
+        await ensureMonth(ym);
+        state.error = '';
+      } catch (e) {
+        state.error = '暫時無法取得檔期，可直接私訊或填寫預約表單。';
+      }
+      if (state.view === ym) render();
+      if (!state.error) prefetchAhead(ym);
+    }
+
+    function dayTitle(date) {
+      const dt = new Date(date + 'T12:00:00+08:00');
+      return (dt.getMonth() + 1) + ' 月 ' + dt.getDate() + ' 日（' + WD[dt.getDay()] + '）';
+    }
+
+    function popoverHtml(date, info) {
+      const s = info.s;
+      let h = '<div class="sc-pop-head"><div><div class="sc-pop-date" id="scPopTitle">' + dayTitle(date) + '</div>' +
+        '<span class="sc-chip sc-' + s + '">' + esc(LABEL[s] || '') + '</span></div>' +
+        '<button type="button" class="sc-x" data-sc-close aria-label="關閉">×</button></div>';
+      const items = info.i || [];
+      if (items.length) {
+        h += '<ul class="sc-items">' + items.map((x) =>
+          '<li><span class="sc-dot sc-' + esc(x.k) + '"></span>' + esc(ITEM_LABEL[x.k] || '') + (x.a ? ' - ' + esc(x.a) : '') +
+          '<span class="sc-t">' + (x.f ? esc(x.f) + '–' + esc(x.t) : '全日') + '</span></li>').join('') + '</ul>';
+      }
+      const groups = info.sl || [];
+      if (groups.length) {
+        h += '<div class="sc-sec">可預約時段</div>' + groups.map((g) =>
+          '<div class="sc-group"><div class="sc-svc">' + g.svc.map(esc).join('・') + '</div><div class="sc-times">' +
+          g.t.map((t) => '<a class="sc-tchip" target="_blank" rel="noopener" href="' +
+            esc(buildBookingUrl({ date: date, time: t, service: g.svc.length === 1 ? g.svc[0] : '' })) + '">' + esc(t) + '</a>').join('') +
+          '</div></div>').join('');
+      } else if (s === 'open') {
+        h += '<p class="sc-note">本日一般服務已無空檔，新娘秘書仍可安排。</p>';
+      } else {
+        h += '<p class="sc-note">本日已無可預約時段。</p>';
+      }
+      h += '<p class="sc-note">' + (info.b ? '本日新娘秘書可安排，歡迎直接諮詢。' : '新娘秘書依婚禮流程另約，即使滿檔也歡迎詢問，我們會盡力為妳協調。') + '</p>';
+      h += '<div class="sc-cta"><a class="btn-solid" target="_blank" rel="noopener" href="' + esc(buildBookingUrl({ date: date, service: '新娘秘書' })) + '">新秘專屬諮詢</a></div>';
+      return h;
+    }
+
+    function placePopover(cell) {
+      if (window.matchMedia && window.matchMedia('(max-width: 720px)').matches) return; // 手機用底部面板（CSS）
+      const r = cell.getBoundingClientRect();
+      const pw = pop.offsetWidth || 340, ph = pop.offsetHeight || 300;
+      let left = r.left + r.width / 2 - pw / 2;
+      left = Math.max(12, Math.min(left, window.innerWidth - pw - 12));
+      const hd = document.getElementById('siteHeader');
+      const minTop = (hd && hd.getBoundingClientRect ? hd.getBoundingClientRect().bottom : 0) + 12;
+      let top = r.bottom + 8;                                   // 優先放在格子下方
+      if (top + ph > window.innerHeight - 12) top = r.top - ph - 8; // 放不下 → 改放上方
+      if (top < minTop) top = Math.max(minTop, Math.round((window.innerHeight - ph) / 2)); // 上下都放不下 → 置中且不壓到導覽列
+      pop.style.left = left + 'px';
+      pop.style.top = top + 'px';
+    }
+
+    function openDay(date, cell) {
+      const info = state.days[date];
+      if (!info || info.s === 'past') return;
+      state.openDate = date;
+      pop.innerHTML = popoverHtml(date, info);
+      pop.hidden = false;
+      backdrop.hidden = false;
+      if (cell) placePopover(cell);
+      const x = pop.querySelector('[data-sc-close]');
+      if (x && x.focus) x.focus();
+    }
+
+    function closePop() {
+      if (pop.hidden) return;
+      pop.hidden = true;
+      backdrop.hidden = true;
+      state.openDate = '';
+    }
+
+    grid.addEventListener('click', (e) => {
+      const cell = e.target && e.target.closest ? e.target.closest('.sc-cell') : null;
+      if (!cell || cell.disabled || !cell.dataset || !cell.dataset.date) return;
+      openDay(cell.dataset.date, cell);
+    });
+    pop.addEventListener('click', (e) => {
+      if (e.target && e.target.closest && e.target.closest('[data-sc-close]')) closePop();
+    });
+    backdrop.addEventListener('click', closePop);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePop(); });
+    window.addEventListener('resize', closePop);
+    window.addEventListener('scroll', () => {
+      if (!(window.matchMedia && window.matchMedia('(max-width: 720px)').matches)) closePop();
+    }, { passive: true });
+    prevBtn.addEventListener('click', () => { if (state.view > state.minYm) { closePop(); showMonth(ymAdd(state.view, -1)); } });
+    nextBtn.addEventListener('click', () => { closePop(); showMonth(ymAdd(state.view, 1)); });
+    statusEl.addEventListener('click', (e) => {
+      if (e.target && e.target.id === 'scRetry') { state.error = ''; start(true); }
+    });
+
+    function start(force) {
+      if (state.started && !force) return;
+      state.started = true;
+      state.minYm = taipeiYm();
+      state.view = state.view || state.minYm;
+      render();
+      fetchRange(state.minYm, INITIAL_MONTHS)
+        .then(() => { state.error = ''; render(); })
+        .catch(() => { state.error = '暫時無法取得檔期，可直接私訊或填寫預約表單。'; render(); });
+    }
+
+    state.minYm = taipeiYm();
+    state.view = state.minYm;
+    render();
+    // 進入區段附近才載入，避免只看首頁的訪客也消耗 Apps Script 額度
+    const section = document.getElementById('schedule');
+    if ('IntersectionObserver' in window && section) {
+      const obs = new IntersectionObserver((entries) => {
+        if (entries.some((en) => en.isIntersecting)) { obs.disconnect(); start(false); }
+      }, { rootMargin: '600px 0px' });
+      obs.observe(section);
+    } else {
+      start(false);
+    }
+
+    // 測試與除錯用的唯讀入口（不含任何金鑰）
+    window.SianSchedule = { state: state, showMonth: showMonth, openDay: openDay, closePop: closePop, start: start, buildBookingUrl: buildBookingUrl, render: render };
+  })();
 </script>
 
 </body>
