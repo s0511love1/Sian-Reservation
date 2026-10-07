@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- ============================================================
      SIAN STUDIO 嫻美學 · 官方網頁（WEB）
-     版本：WEB-A1.3｜Sian-Reservation A1.3版          日期：2026-10-07
+     版本：WEB-A1.4｜Sian-Reservation A1.4版          日期：2026-10-07
      🔴 部署檔名必須改回：index.html
      Repo：Sian-Reservation   →   https://sian-reservation.vercel.app/
      知識庫：SIAN-WEB_規格.md
@@ -1312,11 +1312,17 @@
   // ============================================================
   const SIAN_API_URL = 'https://script.google.com/macros/s/AKfycbwQyfZDecV_vkAuI75dmVUEbasYe4LJzAGLGtFsfU4hz-2NRbXXS4q0lJmm3keFlPzoIg/exec';
   const BOOKING_FORM = {
+    // 🔴 預填一定要用「長網址」：短網址 forms.gle 只是轉址，後面接的 entry 參數不保證會被帶過去
+    //    （一般預約按鈕不帶參數，用短網址 https://forms.gle/URTMEtX1QaF8SnxJ6 沒問題；兩者是同一份表單）
     base: 'https://docs.google.com/forms/d/e/1FAIpQLSfP8E4SW84sHKdHrIOgbGTBTYzrwk4-klwyuduUmoFP_Qxbnw/viewform',
-    // WEB-A1.3：表單 entry 編號（表單編輯器 →「取得預先填入的連結」可查到）；留空＝該題不預填
+    // 官網點時段只預填這兩題，其餘留給客人填
     //   service：服務項目（下拉，選項須與佔用時長 A 欄一致）
     //   datetime：預約日期與時間（同一題）→ 'YYYY-MM-DD HH:mm'
     prefill: { service: 'entry.2005010322', datetime: 'entry.2145003470' }
+    // 表單完整 entry 字典（WEB-A1.4 記錄；目前不預填，要用時加進 prefill 並在 buildBookingUrl 帶值）
+    //   姓名 entry.431409585｜電話 entry.326337404｜服務人數 entry.1703425452｜膚質 entry.154538246
+    //   過敏 entry.829600071｜風格 entry.517895904｜開妝地點 entry.439785993｜宴客地點 entry.59684808
+    //   改善部位 entry.1319225545｜上次霧眉 entry.1867788493
   };
 
   function buildBookingUrl(opts) {
