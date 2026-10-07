@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- ============================================================
      SIAN STUDIO 嫻美學 · 官方網頁（WEB）
-     版本：WEB-A1.2｜Sian-Reservation A1.2版          日期：2026-10-07
+     版本：WEB-A1.3｜Sian-Reservation A1.3版          日期：2026-10-07
      🔴 部署檔名必須改回：index.html
      Repo：Sian-Reservation   →   https://sian-reservation.vercel.app/
      知識庫：SIAN-WEB_規格.md
@@ -1313,23 +1313,20 @@
   const SIAN_API_URL = 'https://script.google.com/macros/s/AKfycbwQyfZDecV_vkAuI75dmVUEbasYe4LJzAGLGtFsfU4hz-2NRbXXS4q0lJmm3keFlPzoIg/exec';
   const BOOKING_FORM = {
     base: 'https://docs.google.com/forms/d/e/1FAIpQLSfP8E4SW84sHKdHrIOgbGTBTYzrwk4-klwyuduUmoFP_Qxbnw/viewform',
-    // 表單定稿後，把各題的 entry 編號填進來（表單編輯器 →「取得預先填入的連結」可查到，例如 'entry.123456789'）
-    // 留空 = 不預填，直接開啟表單
-    prefill: { date: '', time: '', service: '' },
-    // 預填管線測試（WEB-A1.1）：官網網址加上 ?prefilltest=1 才會改用這組假編號，一般客人的連結不受影響
-    // 第 9 批填入真實 entry 編號後，可把這組與 PREFILL_TEST 一起移除
-    testPrefill: { date: 'entry.date', time: 'entry.time', service: 'entry.service' }
+    // WEB-A1.3：表單 entry 編號（表單編輯器 →「取得預先填入的連結」可查到）；留空＝該題不預填
+    //   service：服務項目（下拉，選項須與佔用時長 A 欄一致）
+    //   datetime：預約日期與時間（同一題）→ 'YYYY-MM-DD HH:mm'
+    prefill: { service: 'entry.2005010322', datetime: 'entry.2145003470' }
   };
-  const PREFILL_TEST = /[?&]prefilltest=1(?:&|$)/.test((typeof location !== 'undefined' && location.search) || '');
 
   function buildBookingUrl(opts) {
     const o = opts || {};
     const params = [];
     const add = (entry, value) => { if (entry && value) params.push(encodeURIComponent(entry) + '=' + encodeURIComponent(value)); };
-    const pf = PREFILL_TEST ? BOOKING_FORM.testPrefill : BOOKING_FORM.prefill;
-    add(pf.date, o.date);
-    add(pf.time, o.time);
+    const pf = BOOKING_FORM.prefill;
     add(pf.service, o.service);
+    // 點時段：日期＋時間合併；新秘諮詢沒有時間 → 只帶日期
+    add(pf.datetime, o.date ? (o.time ? o.date + ' ' + o.time : o.date) : '');
     return params.length ? BOOKING_FORM.base + '?usp=pp_url&' + params.join('&') : BOOKING_FORM.base;
   }
 
