@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- ============================================================
      SIAN STUDIO 嫻美學 · 官方網頁（WEB）
-     版本：WEB-A1.1｜Sian-Reservation A1.1版          日期：2026-10-06
+     版本：WEB-A1.2｜Sian-Reservation A1.2版          日期：2026-10-07
      🔴 部署檔名必須改回：index.html
      Repo：Sian-Reservation   →   https://sian-reservation.vercel.app/
      知識庫：SIAN-WEB_規格.md
@@ -683,28 +683,28 @@
   .sc-l .short{display:none;}
   .sc-open{border-color:var(--gold);}
   .sc-open .sc-l{color:var(--gold-deep);}
-  /* 即將滿檔（WEB-A1.1）：還有空檔但當天已有佔用 → 暖奶茶底，讓客人一眼看出時段正在被預約 */
-  .sc-hot{background:#F3E1CE;border-color:#D4A57C;}
-  .sc-hot .sc-l{color:#8E5A35;font-weight:600;}
-  .sc-booked{background:var(--gold-deep);border-color:var(--gold-deep);color:var(--white);}
-  .sc-booked .sc-l{color:rgba(255,255,255,0.92);}
-  .sc-inquiry{background:rgba(197,179,154,0.16);border:1px dashed var(--gold-deep);}
-  .sc-inquiry .sc-l{color:var(--gold-deep);}
-  .sc-closed{background:repeating-linear-gradient(135deg,#F3F1EE 0 6px,#E9E5DF 6px 8px);color:var(--ink-soft);}
+  /* WEB-A1.2 配色：即將滿檔＝品牌金底＋紅字（對比 4.5:1）；預約滿檔（含老師不接單）＝加深斜紋（4.9:1）；洽詢＝加深虛框＋筆數徽章 */
+  .sc-hot{background:#C5B39A;border-color:#B39F82;}
+  .sc-hot .sc-l{color:#8B1E1E;font-weight:700;}
+  .sc-booked,.sc-closed{background:repeating-linear-gradient(135deg,#ECE7E0 0 6px,#D9D1C6 6px 8px);border-color:#CFC6BA;color:#5E564C;}
+  .sc-booked .sc-l,.sc-closed .sc-l{color:#5E564C;font-weight:600;}
+  .sc-inquiry{background:#FBF5EA;border:1.5px dashed #9A845F;}
+  .sc-inquiry .sc-l{color:#7D6A4B;font-weight:600;}
+  .sc-badge{position:absolute;top:4px;left:5px;min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:8px;background:#B5532F;color:#FFFFFF;font-style:normal;font-size:10px;font-weight:600;line-height:16px;text-align:center;}
   .sc-past{opacity:0.32;cursor:default;}
   .sc-loading{cursor:default;color:var(--ink-soft);background:linear-gradient(90deg,#F7F5F1,#FDFBF7,#F7F5F1);background-size:200% 100%;animation:scShimmer 1.4s ease infinite;}
   @keyframes scShimmer{to{background-position:-200% 0;}}
   .sc-bmark{position:absolute;top:4px;right:5px;width:6px;height:6px;border-radius:50%;background:var(--gold-deep);}
-  .sc-booked .sc-bmark{background:var(--white);}
+  .sc-hot .sc-bmark{background:var(--white);}
   .sc-status{min-height:22px;margin-top:14px;font-size:13px;color:var(--ink-soft);text-align:center;}
   .sc-status button{margin-left:8px;background:none;border:none;border-bottom:1px solid var(--gold-deep);color:var(--gold-deep);font:inherit;cursor:pointer;padding:0;}
   .sc-legend{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;margin-top:12px;font-size:12px;color:var(--ink-soft);}
   .sc-legend span{display:inline-flex;align-items:center;gap:6px;}
   .sc-sw{width:14px;height:14px;border-radius:2px;border:1px solid var(--line);display:inline-block;}
   .sc-sw.sc-open{background:var(--white);border-color:var(--gold);}
-  .sc-sw.sc-hot{background:#F3E1CE;border-color:#D4A57C;}
-  .sc-sw.sc-booked{background:var(--gold-deep);border-color:var(--gold-deep);}
-  .sc-sw.sc-inquiry{background:rgba(197,179,154,0.16);border:1px dashed var(--gold-deep);}
+  .sc-sw.sc-hot{background:#C5B39A;border-color:#B39F82;}
+  .sc-sw.sc-booked{background:repeating-linear-gradient(135deg,#ECE7E0 0 3px,#D2C9BD 3px 4px);border-color:#CFC6BA;}
+  .sc-sw.sc-inquiry{background:#FBF5EA;border:1.5px dashed #9A845F;}
   .sc-sw.sc-closed{background:repeating-linear-gradient(135deg,#F3F1EE 0 3px,#E0DBD3 3px 4px);}
   .sc-sw.sc-bdot{width:6px;height:6px;border-radius:50%;background:var(--gold-deep);border:none;}
   .sc-bridal{max-width:760px;margin:28px auto 0;display:flex;align-items:center;justify-content:space-between;gap:24px;padding:22px 28px;background:var(--bg-skin);border:1px solid var(--line);border-radius:4px;}
@@ -718,17 +718,16 @@
   .sc-pop-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px;}
   .sc-pop-date{font-family:'Noto Serif TC', serif;font-size:17px;letter-spacing:0.08em;font-weight:600;}
   .sc-chip{display:inline-block;margin-top:6px;font-size:11px;letter-spacing:0.1em;padding:3px 10px;border-radius:20px;border:1px solid var(--gold);color:var(--gold-deep);}
-  .sc-chip.sc-hot{background:#F3E1CE;border-color:#D4A57C;color:#8E5A35;}
-  .sc-chip.sc-booked{background:var(--gold-deep);border-color:var(--gold-deep);color:var(--white);}
-  .sc-chip.sc-closed{border-color:var(--line);color:var(--ink-soft);background:#F3F1EE;}
-  .sc-chip.sc-inquiry{border-style:dashed;}
+  .sc-chip.sc-hot{background:#C5B39A;border-color:#B39F82;color:#8B1E1E;font-weight:600;}
+  .sc-chip.sc-booked,.sc-chip.sc-closed{background:#ECE7E0;border-color:#CFC6BA;color:#5E564C;}
+  .sc-chip.sc-inquiry{border-style:dashed;border-color:#9A845F;color:#7D6A4B;background:#FBF5EA;}
   .sc-x{background:none;border:none;font-size:22px;line-height:1;color:var(--ink-soft);cursor:pointer;padding:2px 4px;}
   .sc-items{list-style:none;margin:0 0 14px;padding:0;border-top:1px solid var(--line);}
   .sc-items li{display:flex;align-items:center;gap:8px;font-size:13px;padding:9px 0;border-bottom:1px dashed var(--line);}
   .sc-items .sc-t{margin-left:auto;color:var(--ink-soft);font-size:12px;white-space:nowrap;}
   .sc-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--gold-deep);}
   .sc-dot.sc-inquiry{background:transparent;border:1px dashed var(--gold-deep);}
-  .sc-dot.sc-closed{background:#C9C2B8;}
+  .sc-dot.sc-closed{background:var(--gold-deep);}
   .sc-sec{font-size:11px;letter-spacing:0.25em;color:var(--gold-deep);margin:4px 0 8px;}
   .sc-group{margin-bottom:12px;}
   .sc-svc{font-size:12px;color:var(--ink-soft);margin-bottom:6px;line-height:1.6;}
@@ -773,6 +772,8 @@
     .sc-card{padding:18px 12px 16px;}
     .sc-grid,.sc-week{gap:4px;}
     .sc-cell{min-height:54px;padding:4px 1px;}
+    .sc-badge{top:2px;left:2px;min-width:13px;height:13px;padding:0 3px;border-radius:7px;font-size:9px;line-height:13px;}
+    .sc-cell:has(.sc-badge){padding-top:12px;}
     .sc-d{font-size:14px;}
     .sc-l{font-size:10px;}
     .sc-l .full{display:none;}
@@ -987,7 +988,6 @@
         <span><i class="sc-sw sc-hot"></i>即將滿檔</span>
         <span><i class="sc-sw sc-inquiry"></i>洽詢溝通中</span>
         <span><i class="sc-sw sc-booked"></i>預約滿檔</span>
-        <span><i class="sc-sw sc-closed"></i>行程滿檔</span>
         <span><i class="sc-sw sc-bdot"></i>新秘可安排</span>
       </div>
     </div>
@@ -1345,11 +1345,15 @@
     const bridalBtn = document.getElementById('scBridalBtn');
 
     const WD = ['日', '一', '二', '三', '四', '五', '六'];
-    const LABEL = { open: '可預約', hot: '即將滿檔', booked: '預約滿檔', inquiry: '洽詢溝通中', closed: '行程滿檔', past: '', loading: '' };
-    const SHORT = { open: '可約', hot: '將滿', booked: '約滿', inquiry: '洽詢', closed: '滿檔', past: '', loading: '' };
+    // WEB-A1.2：老師不接單（closed）對外一律顯示「預約滿檔」
+    const LABEL = { open: '可預約', hot: '即將滿檔', booked: '預約滿檔', inquiry: '洽詢溝通中', closed: '預約滿檔', past: '', loading: '' };
+    const SHORT = { open: '可約', hot: '將滿', booked: '約滿', inquiry: '洽詢', closed: '約滿', past: '', loading: '' };
     // 顯示狀態：後端回 open 且當天已有任何佔用（已預約／洽詢中／老師部分時段不接單）→ 即將滿檔
     const viewState = (info) => (info.s === 'open' && (info.i || []).length ? 'hot' : info.s);
-    const ITEM_LABEL = { booked: '已預約', inquiry: '洽詢溝通中', closed: '行程滿檔' };
+    const ITEM_LABEL = { booked: '已預約', inquiry: '洽詢溝通中', closed: '已預約' };
+    // WEB-A1.2：老師整天不接單 → 氣泡框顯示成一筆婚紗外拍預約（要改時間或服務名稱改這裡）
+    const CLOSED_DAY_ITEM = { from: '09:00', to: '19:00', service: '婚紗拍攝造型' };
+    const inquiryCount = (info) => (info && info.i ? info.i.filter((x) => x.k === 'inquiry').length : 0);
     const INITIAL_MONTHS = 6, MORE_MONTHS = 3;
     const state = { days: {}, loaded: {}, pending: {}, minYm: '', view: '', error: '', started: false, openDate: '' };
 
@@ -1409,8 +1413,10 @@
         const s = info ? viewState(info) : (loaded ? 'past' : 'loading');
         const off = s === 'past' || s === 'loading';
         const mark = info && info.b ? '<i class="sc-bmark" title="新秘可安排"></i>' : '';
+        const nInq = (s === 'inquiry' || s === 'hot') ? inquiryCount(info) : 0;
+        const badge = nInq ? '<i class="sc-badge" aria-hidden="true">' + nInq + '</i>' : '';
         html += '<button type="button" class="sc-cell sc-' + s + '" data-date="' + date + '"' + (off ? ' disabled' : '') +
-          ' aria-label="' + m + '月' + d + '日 ' + (LABEL[s] || '') + '">' + mark +
+          ' aria-label="' + m + '月' + d + '日 ' + (LABEL[s] || '') + (nInq ? '，洽詢中 ' + nInq + ' 筆' : '') + '">' + mark + badge +
           '<span class="sc-d">' + d + '</span>' +
           '<span class="sc-l"><span class="full">' + (LABEL[s] || '') + '</span><span class="short">' + (SHORT[s] || '') + '</span></span></button>';
       }
@@ -1448,9 +1454,12 @@
         '<button type="button" class="sc-x" data-sc-close aria-label="關閉">×</button></div>';
       const items = info.i || [];
       if (items.length) {
-        h += '<ul class="sc-items">' + items.map((x) =>
-          '<li><span class="sc-dot sc-' + esc(x.k) + '"></span>' + esc(ITEM_LABEL[x.k] || '') + (x.a ? ' - ' + esc(x.a) : '') +
-          '<span class="sc-t">' + (x.f ? esc(x.f) + '–' + esc(x.t) : '全日') + '</span></li>').join('') + '</ul>';
+        h += '<ul class="sc-items">' + items.map((x) => {
+          const wholeDayOff = x.k === 'closed' && !x.f;
+          const label = esc(ITEM_LABEL[x.k] || '') + (x.a ? ' - ' + esc(x.a) : '') + (wholeDayOff ? '・' + esc(CLOSED_DAY_ITEM.service) : '');
+          const span = wholeDayOff ? CLOSED_DAY_ITEM.from + '–' + CLOSED_DAY_ITEM.to : (x.f ? esc(x.f) + '–' + esc(x.t) : '全日');
+          return '<li><span class="sc-dot sc-' + esc(x.k) + '"></span>' + label + '<span class="sc-t">' + span + '</span></li>';
+        }).join('') + '</ul>';
       }
       const groups = info.sl || [];
       if (groups.length) {
