@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- ============================================================
      SIAN STUDIO 嫻美學 · 官方網頁（WEB）
-     版本：WEB-A1.4｜Sian-Reservation A1.4版          日期：2026-10-07
+     版本：WEB-A1.5｜Sian-Reservation A1.5版          日期：2026-10-08
      🔴 部署檔名必須改回：index.html
      Repo：Sian-Reservation   →   https://sian-reservation.vercel.app/
      知識庫：SIAN-WEB_規格.md
@@ -698,6 +698,10 @@
   .sc-hot .sc-bmark{background:var(--white);}
   .sc-status{min-height:22px;margin-top:14px;font-size:13px;color:var(--ink-soft);text-align:center;}
   .sc-status button{margin-left:8px;background:none;border:none;border-bottom:1px solid var(--gold-deep);color:var(--gold-deep);font:inherit;cursor:pointer;padding:0;}
+  /* WEB-A1.5：檔期更新列 */
+  .sc-sync{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 12px;margin-top:6px;font-size:12px;color:var(--ink-soft);text-align:center;}
+  .sc-sync button{background:none;border:none;border-bottom:1px solid var(--gold-deep);color:var(--gold-deep);font:inherit;letter-spacing:0.08em;cursor:pointer;padding:0 0 1px;}
+  .sc-sync button:disabled{opacity:0.45;cursor:default;}
   .sc-legend{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;margin-top:12px;font-size:12px;color:var(--ink-soft);}
   .sc-legend span{display:inline-flex;align-items:center;gap:6px;}
   .sc-sw{width:14px;height:14px;border-radius:2px;border:1px solid var(--line);display:inline-block;}
@@ -983,6 +987,7 @@
       <div class="sc-week"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
       <div class="sc-grid" id="scGrid"></div>
       <div class="sc-status" id="scStatus" aria-live="polite"></div>
+      <div class="sc-sync"><span id="scSyncTime" aria-live="polite"></span><button type="button" id="scRefresh" disabled>更新檔期</button></div>
       <div class="sc-legend">
         <span><i class="sc-sw sc-open"></i>可預約</span>
         <span><i class="sc-sw sc-hot"></i>即將滿檔</span>
@@ -1358,7 +1363,7 @@
     const CLOSED_DAY_ITEM = { from: '09:00', to: '19:00', service: '婚紗拍攝造型' };
     const inquiryCount = (info) => (info && info.i ? info.i.filter((x) => x.k === 'inquiry').length : 0);
     const INITIAL_MONTHS = 6, MORE_MONTHS = 3;
-    const state = { days: {}, loaded: {}, pending: {}, minYm: '', view: '', error: '', started: false, openDate: '' };
+    const state = { days: {}, loaded: {}, pending: {}, minYm: '', view: '', error: '', started: false, openDate: '', fetchedAt: 0, refreshing: false, leftToForm: false, manualAt: 0 };
 
     const pad = (n) => String(n).padStart(2, '0');
     const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1535,20 +1540,101 @@
       if (e.target && e.target.id === 'scRetry') { state.error = ''; start(true); }
     });
 
+    // ============================================================
+    // WEB-A1.5：檔期刷新（不輪詢）
+    //   ① 「更新檔期」按鈕　② 客人從表單分頁切回來（visibilitychange／focus／返回鍵 pageshow）時自動更新
+    //   自動更新最少間隔 60 秒；剛點過表單連結回來則不受間隔限制
+    //   只重抓「目前看的月份起 6 個月」一次請求；其他已載入月份標成過期，翻過去時再抓
+    //   失敗時保留畫面上的舊資料，不清空
+    // ============================================================
+    const AUTO_REFRESH_GAP = 60 * 1000;
+    const MANUAL_REFRESH_GAP = 5 * 1000;
+    const syncTimeEl = document.getElementById('scSyncTime');
+    const refreshBtn = document.getElementById('scRefresh');
+    const hhmm = (t) => { const d = new Date(t); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+
+    function updateSync(note) {
+      if (refreshBtn) {
+        refreshBtn.disabled = !!state.refreshing || !state.started;
+        refreshBtn.textContent = state.refreshing ? '更新中…' : '更新檔期';
+      }
+      if (syncTimeEl) {
+        if (note) syncTimeEl.textContent = note;
+        else syncTimeEl.textContent = state.fetchedAt ? '檔期更新於 ' + hhmm(state.fetchedAt) : '';
+      }
+    }
+
+    async function refresh(reason) {
+      if (!state.started || state.refreshing) return false;
+      const fromForm = state.leftToForm;
+      state.refreshing = true;
+      state.leftToForm = false;
+      updateSync();
+      state.minYm = taipeiYm();
+      if (state.view < state.minYm) state.view = state.minYm;
+      const before = Object.keys(state.loaded);
+      let ok = false;
+      try {
+        const data = await fetchRange(state.view, INITIAL_MONTHS);
+        const fresh = {};
+        (data.loaded || []).forEach((m) => { fresh[m] = true; });
+        before.forEach((m) => { if (!fresh[m]) delete state.loaded[m]; });
+        state.fetchedAt = Date.now();
+        state.error = '';
+        ok = true;
+      } catch (e) {
+        ok = false;
+      }
+      state.refreshing = false;
+      render();
+      if (state.openDate) {
+        const info = state.days[state.openDate];
+        if (!info || info.s === 'past') closePop();
+        else pop.innerHTML = popoverHtml(state.openDate, info);
+      }
+      if (!ok) updateSync(reason === 'manual' ? '更新失敗，請稍後再試' : '');
+      else updateSync(fromForm ? '已更新；剛送出的表單約需 1 分鐘才會出現，可稍後再按更新' : '');
+      return ok;
+    }
+
+    function autoRefresh() {
+      if (!state.started || state.refreshing) return;
+      if (document.visibilityState === 'hidden') return;
+      const age = Date.now() - (state.fetchedAt || 0);
+      if (state.leftToForm || age >= AUTO_REFRESH_GAP) refresh('auto');
+    }
+
+    if (refreshBtn) refreshBtn.addEventListener('click', () => {
+      if (Date.now() - (state.manualAt || 0) < MANUAL_REFRESH_GAP) return;
+      state.manualAt = Date.now();
+      refresh('manual');
+    });
+    document.addEventListener('visibilitychange', autoRefresh);
+    window.addEventListener('focus', autoRefresh);
+    window.addEventListener('pageshow', (e) => { if (e && e.persisted) autoRefresh(); });
+    // 點了表單連結（時段、新秘諮詢、預約按鈕）→ 回來時一定更新
+    document.addEventListener('click', (e) => {
+      const a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+      const href = a ? String(a.getAttribute ? a.getAttribute('href') : a.href) : '';
+      if (/docs\.google\.com\/forms|forms\.gle/.test(href)) state.leftToForm = true;
+    }, true);
+
     function start(force) {
       if (state.started && !force) return;
       state.started = true;
       state.minYm = taipeiYm();
       state.view = state.view || state.minYm;
       render();
+      updateSync();
       fetchRange(state.minYm, INITIAL_MONTHS)
-        .then(() => { state.error = ''; render(); })
-        .catch(() => { state.error = '暫時無法取得檔期，可直接私訊或填寫預約表單。'; render(); });
+        .then(() => { state.error = ''; state.fetchedAt = Date.now(); render(); updateSync(); })
+        .catch(() => { state.error = '暫時無法取得檔期，可直接私訊或填寫預約表單。'; render(); updateSync(); });
     }
 
     state.minYm = taipeiYm();
     state.view = state.minYm;
     render();
+    updateSync();
     // 進入區段附近才載入，避免只看首頁的訪客也消耗 Apps Script 額度
     const section = document.getElementById('schedule');
     if ('IntersectionObserver' in window && section) {
@@ -1561,7 +1647,7 @@
     }
 
     // 測試與除錯用的唯讀入口（不含任何金鑰）
-    window.SianSchedule = { state: state, showMonth: showMonth, openDay: openDay, closePop: closePop, start: start, buildBookingUrl: buildBookingUrl, render: render };
+    window.SianSchedule = { state: state, showMonth: showMonth, openDay: openDay, closePop: closePop, start: start, buildBookingUrl: buildBookingUrl, render: render, refresh: refresh };
   })();
 </script>
 
