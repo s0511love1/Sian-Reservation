@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <!-- ============================================================
      SIAN STUDIO 嫻美學 · 官方網頁（WEB）
-     版本：WEB-A1.5｜Sian-Reservation A1.5版          日期：2026-10-08
+     版本：WEB-A1.6｜Sian-Reservation A1.6版          日期：2026-10-27
      🔴 部署檔名必須改回：index.html
      Repo：Sian-Reservation   →   https://sian-reservation.vercel.app/
      知識庫：SIAN-WEB_規格.md
-     🔴 預約 CTA 目前指向 Google 表單；BOOK 上線後要改這裡（含檔期查詢的 BOOKING_FORM）
+     🔴 WEB-A1.6 起所有「預約」按鈕一律捲到 #schedule（檔期查詢）；只有檔期時段、新秘專屬諮詢、檔期載入失敗時的備用連結會開 Google 表單
+     🔴 BOOK 上線後要改的是 BOOKING_FORM 與 SCHEDULE_FALLBACK_FORM
      🔴 檔期查詢呼叫 Apps Script 公開動作 getAvailability（不帶、也不可帶 SECRET_KEY）
      ============================================================ -->
 <html lang="zh-Hant">
@@ -698,6 +699,7 @@
   .sc-hot .sc-bmark{background:var(--white);}
   .sc-status{min-height:22px;margin-top:14px;font-size:13px;color:var(--ink-soft);text-align:center;}
   .sc-status button{margin-left:8px;background:none;border:none;border-bottom:1px solid var(--gold-deep);color:var(--gold-deep);font:inherit;cursor:pointer;padding:0;}
+  .sc-status .sc-fallback{margin-left:12px;border-bottom:1px solid var(--gold-deep);color:var(--gold-deep);}
   /* WEB-A1.5：檔期更新列 */
   .sc-sync{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 12px;margin-top:6px;font-size:12px;color:var(--ink-soft);text-align:center;}
   .sc-sync button{background:none;border:none;border-bottom:1px solid var(--gold-deep);color:var(--gold-deep);font:inherit;letter-spacing:0.08em;cursor:pointer;padding:0 0 1px;}
@@ -817,7 +819,7 @@
     超過15年彩妝與形象顧問底蘊，專注於骨相美學與精緻質感的服務體驗，
     為每一位客人量身勾勒最自然的高級感。
   </p>
-  <a href="#booking" class="btn-ghost reveal">立即預約</a>
+  <a href="#schedule" class="btn-ghost reveal">立即預約</a>
   <div class="hero-line"></div>
 </section>
 
@@ -1029,9 +1031,9 @@
     <div class="booking-cta reveal">
       <div class="section-eyebrow">RESERVE YOUR DATE</div>
       <h3 style="font-family:'Noto Serif TC', serif; font-size:22px; margin:16px 0 8px;">開始預約</h3>
-      <p>私訊告知需求，我們將為妳細膩安排每一個細節。</p>
-      <a href="https://forms.gle/URTMEtX1QaF8SnxJ6" class="btn-solid" target="_blank">預約新娘秘書服務</a>
-      <a href="https://forms.gle/URTMEtX1QaF8SnxJ6" class="btn-solid" target="_blank">預約日常妝髮與其他項目</a>
+      <p>請先在「檔期查詢」點選有空的日期與時段，預約表單會自動帶入；新娘秘書請使用檔期表下方的「新秘專屬諮詢」。</p>
+      <a href="#schedule" class="btn-solid">預約新娘秘書服務</a>
+      <a href="#schedule" class="btn-solid">預約日常妝髮與其他項目</a>
     </div>
   </div>
 </section>
@@ -1055,7 +1057,7 @@
     <div class="blog-media" id="blogMedia"></div>
     <div class="blog-body" id="blogBody"></div>
     <div class="blog-footer">
-      <a href="#booking" class="btn-solid" id="blogCta">立即預約</a>
+      <a href="#schedule" class="btn-solid" id="blogCta">立即預約</a>
     </div>
   </div>
 </div>
@@ -1318,7 +1320,7 @@
   const SIAN_API_URL = 'https://script.google.com/macros/s/AKfycbwQyfZDecV_vkAuI75dmVUEbasYe4LJzAGLGtFsfU4hz-2NRbXXS4q0lJmm3keFlPzoIg/exec';
   const BOOKING_FORM = {
     // 🔴 預填一定要用「長網址」：短網址 forms.gle 只是轉址，後面接的 entry 參數不保證會被帶過去
-    //    （一般預約按鈕不帶參數，用短網址 https://forms.gle/URTMEtX1QaF8SnxJ6 沒問題；兩者是同一份表單）
+    //    （不帶參數的入口——新秘專屬諮詢的初始連結、檔期載入失敗的備用連結——用短網址 https://forms.gle/URTMEtX1QaF8SnxJ6 沒問題；兩者是同一份表單）
     base: 'https://docs.google.com/forms/d/e/1FAIpQLSfP8E4SW84sHKdHrIOgbGTBTYzrwk4-klwyuduUmoFP_Qxbnw/viewform',
     // 官網點時段只預填這兩題，其餘留給客人填
     //   service：服務項目（下拉，選項須與佔用時長 A 欄一致）
@@ -1329,6 +1331,9 @@
     //   過敏 entry.829600071｜風格 entry.517895904｜開妝地點 entry.439785993｜宴客地點 entry.59684808
     //   改善部位 entry.1319225545｜上次霧眉 entry.1867788493
   };
+
+  // WEB-A1.6：檔期載入失敗時的備用入口（平常不顯示）
+  const SCHEDULE_FALLBACK_FORM = 'https://forms.gle/URTMEtX1QaF8SnxJ6';
 
   function buildBookingUrl(opts) {
     const o = opts || {};
@@ -1430,7 +1435,8 @@
       }
       grid.innerHTML = html;
       if (state.error) {
-        statusEl.innerHTML = esc(state.error) + '<button type="button" id="scRetry">重新載入</button>';
+        statusEl.innerHTML = esc(state.error) + '<button type="button" id="scRetry">重新載入</button>' +
+          '<a class="sc-fallback" href="' + esc(SCHEDULE_FALLBACK_FORM) + '" target="_blank" rel="noopener">直接填寫預約表單</a>';
       } else {
         statusEl.textContent = loaded ? '' : '檔期載入中…';
       }
