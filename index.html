@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <!-- ============================================================
      SIAN STUDIO 嫻美學 · 官方網頁（WEB）
-     版本：WEB-A1.6｜Sian-Reservation A1.6版          日期：2026-10-27
+     版本：WEB-B1｜Sian-Reservation B1版          日期：2026-11-02
      🔴 部署檔名必須改回：index.html
      Repo：Sian-Reservation   →   https://sian-reservation.vercel.app/
      知識庫：SIAN-WEB_規格.md
      🔴 WEB-A1.6 起所有「預約」按鈕一律捲到 #schedule（檔期查詢）；只有檔期時段、新秘專屬諮詢、檔期載入失敗時的備用連結會開 Google 表單
      🔴 BOOK 上線後要改的是 BOOKING_FORM 與 SCHEDULE_FALLBACK_FORM
      🔴 檔期查詢呼叫 Apps Script 公開動作 getAvailability（不帶、也不可帶 SECRET_KEY）
+     🔴 WEB-B1 起「查詢預約狀態」呼叫公開唯讀動作 lookupBooking（手機＋預約日期，不帶任何金鑰）；結果只存在頁面記憶體
      ============================================================ -->
 <html lang="zh-Hant">
 <head>
@@ -744,6 +745,44 @@
   .sc-pop .btn-solid{width:100%;text-align:center;padding:14px 20px;margin-top:4px;}
   .sc-cta{position:sticky;bottom:-20px;margin:0 -22px -20px;padding:12px 22px 20px;background:linear-gradient(rgba(255,255,255,0),var(--white) 28%);}
 
+  /* ---------- 查詢預約狀態（WEB-B1）---------- */
+  .st-card{max-width:760px;margin:28px auto 0;padding:24px 28px;background:var(--white);border:1px solid var(--line);border-radius:4px;scroll-margin-top:96px;}
+  .st-head strong{display:block;font-family:'Noto Serif TC', serif;font-size:16px;letter-spacing:0.08em;margin-bottom:4px;font-weight:600;}
+  .st-head span{font-size:13px;color:var(--ink-soft);}
+  .st-form{display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end;margin-top:16px;}
+  .st-field{display:flex;flex-direction:column;gap:6px;font-size:12px;letter-spacing:0.1em;color:var(--ink-soft);min-width:0;}
+  .st-field input{width:100%;min-width:0;font-family:inherit;font-size:16px;letter-spacing:0.04em;color:var(--ink);padding:11px 12px;border:1px solid var(--line);border-radius:2px;background:var(--bg-skin);-webkit-user-select:text;user-select:text;-webkit-appearance:none;appearance:none;}
+  .st-field input:focus{outline:none;border-color:var(--gold-deep);}
+  .st-btn{border:none;cursor:pointer;font-family:inherit;padding:13px 32px;}
+  .st-btn:disabled{opacity:0.55;cursor:default;transform:none;box-shadow:none;}
+  .st-msg{min-height:20px;margin-top:10px;font-size:13px;color:var(--ink-soft);line-height:1.8;}
+  .st-msg.err{color:#9B3B2A;}
+  .st-item{margin-top:14px;padding:16px 18px;border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:3px;background:var(--bg-skin);}
+  .st-item.st-ok{border-left-color:#5E8B6A;}
+  .st-item.st-wait{border-left-color:var(--gold-deep);}
+  .st-item.st-off{opacity:0.75;border-left-color:#B5ADA3;}
+  .st-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;font-size:13px;}
+  .st-star{color:var(--gold-deep);letter-spacing:0.1em;}
+  .st-state{font-weight:500;color:var(--ink);}
+  .st-svc{font-family:'Noto Serif TC', serif;font-size:15px;margin-top:6px;}
+  .st-when{font-size:13px;color:var(--ink-soft);}
+  .st-amts{display:flex;flex-wrap:wrap;gap:4px 18px;margin-top:8px;font-size:13px;color:var(--ink-soft);}
+  .st-amts b{color:var(--ink);font-weight:500;}
+  .st-note{font-size:12px;color:var(--ink-soft);margin-top:6px;line-height:1.8;}
+  .st-go{margin-top:14px;background:none;border:none;border-bottom:1px solid var(--gold-deep);color:var(--gold-deep);font:inherit;font-size:13px;letter-spacing:0.08em;cursor:pointer;padding:0 0 1px;}
+  .st-foot{font-size:12px;color:var(--ink-soft);margin-top:14px;line-height:1.8;}
+  /* 只在查詢成功的這台裝置上出現 */
+  .sc-cell.sc-mine{box-shadow:inset 0 0 0 2px var(--gold-deep);}
+  .sc-star{position:absolute;right:4px;bottom:3px;font-style:normal;font-size:11px;line-height:1;}
+  .sc-mine-box{margin:-4px 0 14px;padding:10px 12px;background:#FBF5EA;border:1px solid var(--gold);border-radius:4px;font-size:13px;line-height:1.7;}
+  .sc-mine-box div+div{margin-top:6px;}
+  .sc-mine-box span{display:block;font-size:12px;color:var(--ink-soft);}
+  .foot-links{margin-bottom:10px;}
+  .foot-links a{color:var(--gold-deep);border-bottom:1px solid var(--gold);}
+  @media (min-width: 721px) and (max-width: 1000px){
+    .nav-links{gap:22px;}
+  }
+
   @media (max-width: 860px){
     .booking-inner{grid-template-columns:1fr;gap:56px;}
   }
@@ -761,7 +800,7 @@
       overflow:hidden;
       transition:max-height 0.4s ease;
     }
-    .nav-links.open{max-height:320px;}
+    .nav-links.open{max-height:400px;}
     .nav-links a{
       width:100%;
       text-align:center;
@@ -787,6 +826,10 @@
     .sc-bridal{flex-direction:column;align-items:stretch;text-align:center;padding:20px;}
     .sc-backdrop{background:rgba(74,68,60,0.28);}
     .sc-pop{left:0 !important;right:0;top:auto !important;bottom:0;width:100%;max-width:100%;max-height:78vh;border-radius:14px 14px 0 0;padding:20px 20px calc(24px + env(safe-area-inset-bottom,0px));}
+    .st-card{padding:20px;}
+    .st-form{grid-template-columns:1fr;}
+    .st-btn{width:100%;}
+    .sc-star{right:2px;bottom:2px;font-size:9px;}
   }
 </style>
 </head>
@@ -800,6 +843,7 @@
       <a href="#service">服務項目</a>
       <a href="#guides">美學分享</a>
       <a href="#schedule">檔期查詢</a>
+      <a href="#status">我的預約</a>
       <a href="#booking">預約須知</a>
     </div>
     <button class="nav-toggle" id="navToggle" aria-label="開啟選單">
@@ -998,6 +1042,17 @@
         <span><i class="sc-sw sc-bdot"></i>新秘可安排</span>
       </div>
     </div>
+    <div class="st-card" id="status">
+      <div class="st-head"><strong>已經預約了？查詢預約狀態</strong><span>輸入預約時留的手機號碼與預約日期，就能看到預約與訂金核對進度。</span></div>
+      <form class="st-form" id="stForm" autocomplete="on" novalidate>
+        <label class="st-field"><span>手機號碼</span><input id="stPhone" name="tel" type="tel" inputmode="numeric" autocomplete="tel" placeholder="0912345678" maxlength="20"></label>
+        <label class="st-field"><span>預約日期</span><input id="stDate" name="date" type="date"></label>
+        <button type="submit" class="btn-solid st-btn" id="stBtn">查詢</button>
+      </form>
+      <div class="st-msg" id="stMsg" aria-live="polite"></div>
+      <div id="stResult"></div>
+      <p class="st-foot">老師每天晚上 9:00 前核對匯款。查詢結果只會顯示在這台裝置上，關掉頁面就清除。</p>
+    </div>
     <div class="sc-bridal reveal">
       <div><strong>新娘秘書專屬諮詢</strong><span>婚禮檔期依流程與場次另約，任何日期都可以先詢問</span></div>
       <a class="btn-solid" id="scBridalBtn" href="https://forms.gle/URTMEtX1QaF8SnxJ6" target="_blank" rel="noopener">新秘專屬諮詢</a>
@@ -1040,6 +1095,7 @@
 
 <footer>
   <div class="logo-mark">SIAN <span>嫻美學</span></div>
+  <p class="foot-links"><a href="#status">查詢預約狀態</a></p>
   <p>© SIAN STUDIO 嫻美學．All Rights Reserved.</p>
 </footer>
 </main>
@@ -1066,13 +1122,15 @@
   // ---------- Basic anti-copy protection ----------
   // QR codes in .qr-item are exempt so guests can long-press to save / add friend
   const isQrImage = (target) => target.closest && target.closest('.qr-item');
+  // WEB-B1：查詢表單的輸入框要能長按貼上、選取文字
+  const isFormField = (target) => !!(target && target.closest && target.closest('input, textarea, select'));
 
   document.addEventListener('contextmenu', (e) => {
-    if (isQrImage(e.target)) return;
+    if (isQrImage(e.target) || isFormField(e.target)) return;
     e.preventDefault();
   });
   document.addEventListener('selectstart', (e) => {
-    if (isQrImage(e.target)) return;
+    if (isQrImage(e.target) || isFormField(e.target)) return;
     e.preventDefault();
   });
   document.addEventListener('dragstart', (e) => {
@@ -1080,6 +1138,7 @@
     e.preventDefault();
   });
   document.addEventListener('keydown', (e) => {
+    if (isFormField(e.target)) return;
     const key = e.key ? e.key.toLowerCase() : '';
     const isCopyShortcut = (e.ctrlKey || e.metaKey) && ['c','x','u','s','p','a'].includes(key);
     if (isCopyShortcut) e.preventDefault();
@@ -1368,7 +1427,10 @@
     const CLOSED_DAY_ITEM = { from: '09:00', to: '19:00', service: '婚紗拍攝造型' };
     const inquiryCount = (info) => (info && info.i ? info.i.filter((x) => x.k === 'inquiry').length : 0);
     const INITIAL_MONTHS = 6, MORE_MONTHS = 3;
-    const state = { days: {}, loaded: {}, pending: {}, minYm: '', view: '', error: '', started: false, openDate: '', fetchedAt: 0, refreshing: false, leftToForm: false, manualAt: 0 };
+    const state = { days: {}, loaded: {}, pending: {}, minYm: '', view: '', error: '', started: false, openDate: '', fetchedAt: 0, refreshing: false, leftToForm: false, manualAt: 0, mine: {} };
+    // WEB-B1：查詢成功後才有的個人標記（只在頁面記憶體；作廢的不標）
+    const MINE_LABEL = { requested: '📨 申請確認中', checking: '⏳ 訂金核對中', confirmed: '✅ 已收訂金', paid: '✅ 已付清', done: '🌸 服務完成' };
+    const mineOn = (date) => (state.mine[date] && state.mine[date].length ? state.mine[date] : null);
 
     const pad = (n) => String(n).padStart(2, '0');
     const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1428,8 +1490,10 @@
         const mark = info && info.b ? '<i class="sc-bmark" title="新秘可安排"></i>' : '';
         const nInq = (s === 'inquiry' || s === 'hot') ? inquiryCount(info) : 0;
         const badge = nInq ? '<i class="sc-badge" aria-hidden="true">' + nInq + '</i>' : '';
-        html += '<button type="button" class="sc-cell sc-' + s + '" data-date="' + date + '"' + (off ? ' disabled' : '') +
-          ' aria-label="' + m + '月' + d + '日 ' + (LABEL[s] || '') + (nInq ? '，洽詢中 ' + nInq + ' 筆' : '') + '">' + mark + badge +
+        const mine = mineOn(date);
+        const star = mine ? '<i class="sc-star" aria-hidden="true">⭐</i>' : '';
+        html += '<button type="button" class="sc-cell sc-' + s + (mine ? ' sc-mine' : '') + '" data-date="' + date + '"' + (off ? ' disabled' : '') +
+          ' aria-label="' + m + '月' + d + '日 ' + (LABEL[s] || '') + (nInq ? '，洽詢中 ' + nInq + ' 筆' : '') + (mine ? '，您的預約' : '') + '">' + mark + badge + star +
           '<span class="sc-d">' + d + '</span>' +
           '<span class="sc-l"><span class="full">' + (LABEL[s] || '') + '</span><span class="short">' + (SHORT[s] || '') + '</span></span></button>';
       }
@@ -1466,6 +1530,9 @@
       let h = '<div class="sc-pop-head"><div><div class="sc-pop-date" id="scPopTitle">' + dayTitle(date) + '</div>' +
         '<span class="sc-chip sc-' + viewState(info) + '">' + esc(LABEL[viewState(info)] || '') + '</span></div>' +
         '<button type="button" class="sc-x" data-sc-close aria-label="關閉">×</button></div>';
+      const myList = mineOn(date);
+      if (myList) h += '<div class="sc-mine-box">' + myList.map((x) => '<div><b>⭐ 您的預約</b>・' + esc(MINE_LABEL[x.state] || '') +
+        '<span>' + esc(x.time || '時間由老師與您確認') + '｜' + esc(x.service) + '</span></div>').join('') + '</div>';
       const items = info.i || [];
       if (items.length) {
         h += '<ul class="sc-items">' + items.map((x) => {
@@ -1653,7 +1720,192 @@
     }
 
     // 測試與除錯用的唯讀入口（不含任何金鑰）
-    window.SianSchedule = { state: state, showMonth: showMonth, openDay: openDay, closePop: closePop, start: start, buildBookingUrl: buildBookingUrl, render: render, refresh: refresh };
+    // WEB-B1：查詢預約狀態用 —— 設定／清除個人標記、捲到那一天並打開當天說明
+    function setMine(items) {
+      state.mine = {};
+      (Array.isArray(items) ? items : []).forEach((x) => {
+        if (!x || x.state === 'cancelled' || !/^\d{4}-\d{2}-\d{2}$/.test(String(x.date || ''))) return;
+        (state.mine[x.date] = state.mine[x.date] || []).push({ state: x.state, time: x.time || '', service: x.service || '' });
+      });
+      render();
+      if (state.openDate) { const info = state.days[state.openDate]; if (info && info.s !== 'past') pop.innerHTML = popoverHtml(state.openDate, info); }
+    }
+    async function focusDate(date) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date || ''))) return;
+      start(false);
+      const ym = date.slice(0, 7);
+      closePop();
+      if (ym >= state.minYm && ym !== state.view) await showMonth(ym);
+      // 立即捲到檔期表；等畫面停下來再打開（桌機版一捲動就會關掉氣泡框，html 又設了平滑捲動）
+      if (grid.scrollIntoView) grid.scrollIntoView({ block: 'center', behavior: 'instant' });
+      await new Promise((res) => {
+        let last = -1, same = 0, n = 0;
+        const tick = () => { const y = window.scrollY; if (y === last) same++; else { same = 0; last = y; } if (same >= 3 || ++n > 90) res(); else requestAnimationFrame(tick); };
+        requestAnimationFrame(tick);
+      });
+      const cell = grid.querySelector ? grid.querySelector('[data-date="' + date + '"]') : null;
+      openDay(date, cell);
+    }
+
+    window.SianSchedule = { state: state, showMonth: showMonth, openDay: openDay, closePop: closePop, start: start, buildBookingUrl: buildBookingUrl, render: render, refresh: refresh, setMine: setMine, focusDate: focusDate };
+  })();
+
+  // ============================================================
+  // WEB-B1：查詢預約狀態（手機號碼＋預約日期）
+  //   呼叫 Apps Script 公開「唯讀」動作 lookupBooking（不帶、也不可帶任何金鑰）
+  //   查到的結果只存在這次開啟的頁面記憶體（不寫瀏覽器儲存）：檔期表上的「⭐ 您的預約」只有這台裝置、這次瀏覽看得到
+  //   專屬連結：#status（開啟查詢）｜#status?date=YYYY-MM-DD（帶入日期）｜#status?phone=09xxxxxxxx&date=YYYY-MM-DD（直接查詢）
+  //   讀完參數立刻把網址改回 #status，手機號碼不留在網址列與瀏覽紀錄
+  // ============================================================
+  (function setupStatusLookup() {
+    const form = document.getElementById('stForm');
+    if (!form) return;
+    const phoneEl = document.getElementById('stPhone');
+    const dateEl = document.getElementById('stDate');
+    const btn = document.getElementById('stBtn');
+    const msgEl = document.getElementById('stMsg');
+    const resultEl = document.getElementById('stResult');
+    const card = document.getElementById('status');
+    const CHECK_NOTE = '老師每天晚上 9:00 前核對匯款';
+    const PAST_DAYS = 30, FUTURE_DAYS = 400;   // 與 GS lookupBooking 相同
+    const STATE = {
+      requested: { title: '已收到申請・確認中', cls: 'st-wait', note: '老師會以 LINE 與您確認檔期與訂金。如已匯款，' + CHECK_NOTE + '。' },
+      checking:  { title: '檔期已保留・訂金核對中', cls: 'st-wait', note: CHECK_NOTE + '，核對完成後這裡會顯示「✅ 已收訂金」。' },
+      confirmed: { title: '✅ 預約成功・已收訂金', cls: 'st-ok', note: '尾款請於服務當天支付。' },
+      paid:      { title: '✅ 預約成功・款項已付清', cls: 'st-ok', note: '' },
+      done:      { title: '🌸 服務已完成，謝謝您', cls: 'st-done', note: '' },
+      cancelled: { title: '此預約已取消', cls: 'st-off', note: '如有疑問，請直接 LINE 我們。' }
+    };
+    const NOT_FOUND = '查無符合的預約。請確認手機號碼與預約日期和預約時填寫的相同；日期若有調整過，請用新日期查詢。只留 LINE、沒有留手機的客人，請直接 LINE 我們。';
+    const WD = ['日', '一', '二', '三', '四', '五', '六'];
+    const pad = (n) => String(n).padStart(2, '0');
+    const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    function taipeiToday() {
+      const now = new Date();
+      const tp = new Date(now.getTime() + (now.getTimezoneOffset() + 480) * 60000);
+      return tp.getFullYear() + '-' + pad(tp.getMonth() + 1) + '-' + pad(tp.getDate());
+    }
+    function addDays(ymd, n) {
+      const d = new Date(ymd + 'T00:00:00Z');
+      d.setUTCDate(d.getUTCDate() + n);
+      return d.toISOString().slice(0, 10);
+    }
+    // 任何寫法的手機號碼 → 09xxxxxxxx；不是手機回 ''（規則與 GS 相同）
+    function phoneDigits(v) {
+      let d = String(v == null ? '' : v);
+      d = (d.normalize ? d.normalize('NFKC') : d).replace(/\D/g, '');
+      if (/^886\d{9}$/.test(d)) d = '0' + d.slice(3);
+      if (/^9\d{8}$/.test(d)) d = '0' + d;
+      return /^09\d{8}$/.test(d) ? d : '';
+    }
+    const money = (n) => 'NT$ ' + String(Math.round(Number(n) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    function dayText(date) {
+      const dt = new Date(date + 'T12:00:00+08:00');
+      return (dt.getMonth() + 1) + ' 月 ' + dt.getDate() + ' 日（' + WD[dt.getDay()] + '）';
+    }
+    const today = taipeiToday();
+    const minDate = addDays(today, -PAST_DAYS), maxDate = addDays(today, FUTURE_DAYS);
+    dateEl.min = minDate;
+    dateEl.max = maxDate;
+    let busy = false, seq = 0;
+
+    function setMsg(text, isErr) {
+      msgEl.textContent = text || '';
+      msgEl.classList.toggle('err', !!isErr);
+    }
+    function setMine(items) {
+      if (window.SianSchedule && window.SianSchedule.setMine) window.SianSchedule.setMine(items);
+    }
+    function amountsHtml(x) {
+      const a = x.amounts;
+      if (!a) return '';
+      const parts = ['<span>' + (x.state === 'checking' ? '應付訂金' : '訂金') + ' <b>' + money(a.deposit) + '</b></span>'];
+      parts.push('<span>已收 <b>' + (a.received == null ? '核對中' : money(a.received)) + '</b></span>');
+      if (a.remaining != null) parts.push('<span>尚需支付 <b>' + money(a.remaining) + '</b></span>');
+      return '<div class="st-amts">' + parts.join('') + '</div>';
+    }
+    function itemHtml(x) {
+      const st = STATE[x.state] || { title: '', cls: '', note: '' };
+      return '<div class="st-item ' + st.cls + '">' +
+        '<div class="st-top"><span class="st-star">' + (x.state === 'cancelled' ? '您的預約' : '⭐ 您的預約') + '</span><span class="st-state">' + esc(st.title) + '</span></div>' +
+        '<div class="st-svc">' + esc(x.name) + '・' + esc(x.service) + '</div>' +
+        '<div class="st-when">' + esc(dayText(x.date)) + ' ' + esc(x.time || '時間由老師與您確認') + '</div>' +
+        amountsHtml(x) +
+        (st.note ? '<p class="st-note">' + esc(st.note) + '</p>' : '') +
+        '</div>';
+    }
+    function errorText(data) {
+      if (data.error === 'rate_limited') return data.wait === 'tomorrow' ? '今天查詢失敗次數太多，請明天再試，或直接 LINE 我們。' : '查詢失敗次數太多，請 ' + (Number(data.wait) || 60) + ' 分鐘後再試，或直接 LINE 我們。';
+      if (data.error === 'busy') return '目前查詢人數較多，請 ' + (Number(data.wait) || 10) + ' 分鐘後再試。';
+      if (data.error === 'bad_input') return '請確認手機號碼與預約日期。';
+      return '暫時無法查詢，請稍後再試或直接 LINE 我們。';
+    }
+
+    async function query(phone, date) {
+      if (busy) return;
+      busy = true;
+      const my = ++seq;
+      btn.disabled = true;
+      btn.textContent = '查詢中…';
+      resultEl.innerHTML = '';
+      setMine([]);
+      setMsg('');
+      try {
+        const url = SIAN_API_URL + '?p=' + encodeURIComponent(JSON.stringify({ action: 'lookupBooking', phone: phone, date: date }));
+        const res = await fetch(url, { method: 'GET', redirect: 'follow' });
+        const data = await res.json();
+        if (my !== seq) return;
+        if (!data.ok) { setMsg(errorText(data), true); return; }
+        if (!data.found || !Array.isArray(data.items) || !data.items.length) { setMsg(NOT_FOUND, true); return; }
+        const items = data.items;
+        const live = items.filter((x) => x.state !== 'cancelled');
+        resultEl.innerHTML = items.map(itemHtml).join('') +
+          (live.length ? '<button type="button" class="st-go" data-st-go="' + esc(live[0].date) + '">在檔期表查看 ⭐</button>' : '');
+        setMine(items);
+        setMsg('');
+      } catch (e) {
+        if (my === seq) setMsg('暫時無法查詢，請稍後再試或直接 LINE 我們。', true);
+      } finally {
+        if (my === seq) { busy = false; btn.disabled = false; btn.textContent = '查詢'; }
+      }
+    }
+
+    function submit() {
+      const phone = phoneDigits(phoneEl.value);
+      const date = String(dateEl.value || '').trim();
+      if (!phone) { setMsg('請輸入 09 開頭的 10 碼手機號碼（只留 LINE 的客人請直接 LINE 我們）', true); return false; }
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { setMsg('請選擇預約日期', true); return false; }
+      if (date < minDate || date > maxDate) { setMsg('可查詢今天前 ' + PAST_DAYS + ' 天到 ' + FUTURE_DAYS + ' 天內的預約', true); return false; }
+      query(phone, date);
+      return true;
+    }
+
+    form.addEventListener('submit', (e) => { if (e && e.preventDefault) e.preventDefault(); submit(); });
+    resultEl.addEventListener('click', (e) => {
+      const b = e.target && e.target.closest ? e.target.closest('[data-st-go]') : null;
+      if (b && window.SianSchedule && window.SianSchedule.focusDate) window.SianSchedule.focusDate(b.getAttribute('data-st-go'));
+    });
+
+    // 專屬連結：#status?phone=…&date=…
+    function applyHash() {
+      const m = String(location.hash || '').match(/^#status(?:\?(.*))?$/);
+      if (!m) return;
+      const params = {};
+      String(m[1] || '').split('&').forEach((kv) => {
+        const i = kv.indexOf('=');
+        if (i > 0) { try { params[decodeURIComponent(kv.slice(0, i))] = decodeURIComponent(kv.slice(i + 1).replace(/\+/g, ' ')); } catch (e) {} }
+      });
+      if (params.phone) phoneEl.value = params.phone;
+      if (params.date) dateEl.value = params.date;
+      if (m[1] && history.replaceState) { try { history.replaceState(null, '', (location.pathname || '') + (location.search || '') + '#status'); } catch (e) {} }
+      setTimeout(() => { if (card && card.scrollIntoView) card.scrollIntoView({ block: 'start' }); }, 300);   // 等中文字型載入、版面重排後再捲動
+      if (params.phone && params.date) submit();
+    }
+    window.addEventListener('hashchange', applyHash);
+    applyHash();
+
+    // 測試與除錯用的唯讀入口（不含任何金鑰）
+    window.SianStatus = { submit: submit, query: query, applyHash: applyHash, phoneDigits: phoneDigits };
   })();
 </script>
 
