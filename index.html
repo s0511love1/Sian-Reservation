@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- ============================================================
      SIAN STUDIO 嫻美學 · 官方網頁（WEB）
-     版本：WEB-B1｜Sian-Reservation B1版          日期：2026-11-02
+     版本：WEB-B2｜Sian-Reservation B2版          日期：2026-11-17
      🔴 部署檔名必須改回：index.html
      Repo：Sian-Reservation   →   https://sian-reservation.vercel.app/
      知識庫：SIAN-WEB_規格.md
@@ -9,6 +9,8 @@
      🔴 BOOK 上線後要改的是 BOOKING_FORM 與 SCHEDULE_FALLBACK_FORM
      🔴 檔期查詢呼叫 Apps Script 公開動作 getAvailability（不帶、也不可帶 SECRET_KEY）
      🔴 WEB-B1 起「查詢預約狀態」呼叫公開唯讀動作 lookupBooking（手機＋預約日期，不帶任何金鑰）；結果只存在頁面記憶體
+     🔴 WEB-B2 起檔期表上方有服務篩選列（服務清單來自 getAvailability 的 services）；按鈕上的短別名只管顯示（SVC_ALIAS），
+        帶進表單的一律是「佔用時長」A 欄原名＝Google 表單「預約項目」選項，兩邊要逐字一致
      ============================================================ -->
 <html lang="zh-Hant">
 <head>
@@ -744,6 +746,29 @@
   .sc-note{font-size:12px;color:var(--ink-soft);line-height:1.8;margin:2px 0 12px;}
   .sc-pop .btn-solid{width:100%;text-align:center;padding:14px 20px;margin-top:4px;}
   .sc-cta{position:sticky;bottom:-20px;margin:0 -22px -20px;padding:12px 22px 20px;background:linear-gradient(rgba(255,255,255,0),var(--white) 28%);}
+  /* WEB-B2：服務篩選列、此項目約滿、服務摘要、上午／下午／晚上 4 欄時段網格 */
+  .sc-filter{margin:0 0 16px;}
+  .sc-filter[hidden]{display:none;}
+  .sc-filter-q{font-size:12px;letter-spacing:0.15em;color:var(--gold-deep);margin-bottom:8px;}
+  .sc-fbar{display:flex;flex-wrap:wrap;gap:6px;}
+  .sc-fbtn{font-family:inherit;font-size:13px;letter-spacing:0.04em;line-height:1.4;color:var(--ink);background:var(--white);border:1px solid var(--gold);border-radius:20px;padding:6px 14px;min-height:36px;cursor:pointer;transition:background 0.25s ease,color 0.25s ease;}
+  .sc-fbtn:hover{background:var(--bg-skin);}
+  .sc-fbtn[aria-pressed="true"]{background:var(--gold);border-color:var(--gold-deep);color:var(--white);}
+  .sc-fbtn:focus-visible{outline:2px solid var(--gold-deep);outline-offset:2px;}
+  .sc-fhint{min-height:18px;margin-top:8px;font-size:12px;line-height:1.6;color:var(--ink-soft);}
+  .sc-grid.sc-bfocus .sc-bmark{width:9px;height:9px;top:3px;right:3px;box-shadow:0 0 0 2px var(--white);}
+  .sc-svcfull{background:repeating-linear-gradient(135deg,#ECE7E0 0 6px,#D9D1C6 6px 8px);border-color:#CFC6BA;color:#5E564C;}
+  .sc-svcfull .sc-l{color:#5E564C;font-weight:600;}
+  .sc-chip.sc-svcfull{background:#ECE7E0;border-color:#CFC6BA;color:#5E564C;}
+  .sc-srow{display:flex;align-items:center;gap:8px;width:100%;padding:11px 0;background:none;border:none;border-bottom:1px dashed var(--line);font-family:inherit;font-size:13px;letter-spacing:0.03em;color:var(--ink);text-align:left;cursor:pointer;}
+  .sc-srow span{margin-left:auto;font-size:12px;color:var(--ink-soft);white-space:nowrap;}
+  .sc-srow b{font-weight:400;color:var(--gold-deep);font-size:16px;line-height:1;}
+  .sc-srow:hover{color:var(--gold-deep);}
+  .sc-srow.sc-off{cursor:default;opacity:0.45;}
+  .sc-part{font-size:12px;letter-spacing:0.1em;color:var(--ink-soft);margin:10px 0 6px;}
+  .sc-tgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;}
+  .sc-tgrid .sc-tchip{display:flex;align-items:center;justify-content:center;min-height:44px;padding:0;font-size:14px;letter-spacing:0.04em;}
+  .sc-swap{display:inline-block;margin:14px 0 4px;background:none;border:none;border-bottom:1px solid var(--gold-deep);color:var(--gold-deep);font:inherit;font-size:13px;letter-spacing:0.06em;cursor:pointer;padding:0 0 1px;}
 
   /* ---------- 查詢預約狀態（WEB-B1）---------- */
   .st-card{max-width:760px;margin:28px auto 0;padding:24px 28px;background:var(--white);border:1px solid var(--line);border-radius:4px;scroll-margin-top:96px;}
@@ -1022,9 +1047,14 @@
       <div class="section-eyebrow reveal">AVAILABILITY</div>
       <h2 class="reveal">檔期查詢</h2>
       <div class="divider reveal"></div>
-      <p class="sc-intro reveal">點選日期即可查看可預約時段。新娘秘書服務依婚禮流程另約時間，即使顯示滿檔也歡迎諮詢。</p>
+      <p class="sc-intro reveal">先選想預約的項目，或直接點選日期查看可預約時段。新娘秘書服務依婚禮流程另約時間，即使顯示滿檔也歡迎諮詢。</p>
     </div>
     <div class="sc-card reveal">
+      <div class="sc-filter" id="scFilter" hidden>
+        <div class="sc-filter-q" id="scFilterQ">想預約哪一項？</div>
+        <div class="sc-fbar" id="scFbar" role="group" aria-labelledby="scFilterQ"></div>
+        <div class="sc-fhint" id="scFhint" aria-live="polite"></div>
+      </div>
       <div class="sc-head">
         <button type="button" class="sc-nav" id="scPrev" aria-label="上個月">‹</button>
         <div class="sc-month" id="scMonth">檔期載入中</div>
@@ -1087,7 +1117,7 @@
       <div class="section-eyebrow">RESERVE YOUR DATE</div>
       <h3 style="font-family:'Noto Serif TC', serif; font-size:22px; margin:16px 0 8px;">開始預約</h3>
       <p>請先在「檔期查詢」點選有空的日期與時段，預約表單會自動帶入；新娘秘書請使用檔期表下方的「新秘專屬諮詢」。</p>
-      <a href="#schedule" class="btn-solid">預約新娘秘書服務</a>
+      <a href="#schedule" class="btn-solid" data-sc-pick="bridal">預約新娘秘書服務</a>
       <a href="#schedule" class="btn-solid">預約日常妝髮與其他項目</a>
     </div>
   </div>
@@ -1415,19 +1445,31 @@
     const pop = document.getElementById('scPop');
     const backdrop = document.getElementById('scBackdrop');
     const bridalBtn = document.getElementById('scBridalBtn');
+    const filterEl = document.getElementById('scFilter');
+    const fbar = document.getElementById('scFbar');
+    const fhint = document.getElementById('scFhint');
 
     const WD = ['日', '一', '二', '三', '四', '五', '六'];
     // WEB-A1.2：老師不接單（closed）對外一律顯示「預約滿檔」
-    const LABEL = { open: '可預約', hot: '即將滿檔', booked: '預約滿檔', inquiry: '洽詢溝通中', closed: '預約滿檔', past: '', loading: '' };
-    const SHORT = { open: '可約', hot: '將滿', booked: '約滿', inquiry: '洽詢', closed: '約滿', past: '', loading: '' };
+    // WEB-B2：svcfull＝選了某個服務、當天別的服務有空但這項沒有（樣式同預約滿檔、仍可點開看其他項目）
+    const LABEL = { open: '可預約', hot: '即將滿檔', booked: '預約滿檔', inquiry: '洽詢溝通中', closed: '預約滿檔', svcfull: '此項目約滿', past: '', loading: '' };
+    const SHORT = { open: '可約', hot: '將滿', booked: '約滿', inquiry: '洽詢', closed: '約滿', svcfull: '約滿', past: '', loading: '' };
     // 顯示狀態：後端回 open 且當天已有任何佔用（已預約／洽詢中／老師部分時段不接單）→ 即將滿檔
     const viewState = (info) => (info.s === 'open' && (info.i || []).length ? 'hot' : info.s);
     const ITEM_LABEL = { booked: '已預約', inquiry: '洽詢溝通中', closed: '已預約' };
     // WEB-A1.2：老師整天不接單 → 氣泡框顯示成一筆婚紗外拍預約（要改時間或服務名稱改這裡）
     const CLOSED_DAY_ITEM = { from: '09:00', to: '19:00', service: '婚紗拍攝造型' };
+    // WEB-B2：服務按鈕上的短別名（只影響顯示）。🔴 預填表單一律用原名（＝佔用時長 A 欄＝表單「預約項目」選項）；查不到別名就顯示原名
+    const SVC_ALIAS = {
+      '新娘秘書': '新娘秘書', '新娘試妝': '新娘試妝', '活動梳化': '活動梳化', '婚紗拍攝造型': '婚紗造型',
+      '精緻柔霧眉設計': '柔霧眉', '彩妝教學-全妝課 (3.5小時)': '全妝課 3.5h', '彩妝教學-體驗課 (1小時)': '體驗課 1h'
+    };
+    const svcLabel = (name) => (Object.prototype.hasOwnProperty.call(SVC_ALIAS, name) ? SVC_ALIAS[name] : String(name));
+    // 時段分三段，界線與 ADM 戰情分析相同：上午 <12:00、下午 12:00–17:59、晚上 ≥18:00
+    const DAY_PARTS = [{ label: '上午', before: '12:00' }, { label: '下午', before: '18:00' }, { label: '晚上', before: '99:99' }];
     const inquiryCount = (info) => (info && info.i ? info.i.filter((x) => x.k === 'inquiry').length : 0);
     const INITIAL_MONTHS = 6, MORE_MONTHS = 3;
-    const state = { days: {}, loaded: {}, pending: {}, minYm: '', view: '', error: '', started: false, openDate: '', fetchedAt: 0, refreshing: false, leftToForm: false, manualAt: 0, mine: {} };
+    const state = { days: {}, loaded: {}, pending: {}, minYm: '', view: '', error: '', started: false, openDate: '', fetchedAt: 0, refreshing: false, leftToForm: false, manualAt: 0, mine: {}, services: [], svc: '', wantSvc: '', filterSig: null };
     // WEB-B1：查詢成功後才有的個人標記（只在頁面記憶體；作廢的不標）
     const MINE_LABEL = { requested: '📨 申請確認中', checking: '⏳ 訂金核對中', confirmed: '✅ 已收訂金', paid: '✅ 已付清', done: '🌸 服務完成' };
     const mineOn = (date) => (state.mine[date] && state.mine[date].length ? state.mine[date] : null);
@@ -1452,6 +1494,7 @@
         const data = await res.json();
         if (!data.ok) throw new Error(data.error || '檔期資料錯誤');
         Object.keys(data.days || {}).forEach((d) => { state.days[d] = data.days[d]; });
+        if (Array.isArray(data.services)) setServices(data.services);
         (data.loaded || []).forEach((m) => { state.loaded[m] = true; });
         return data;
       })();
@@ -1485,7 +1528,7 @@
       for (let d = 1; d <= dim; d++) {
         const date = ym + '-' + pad(d);
         const info = state.days[date];
-        const s = info ? viewState(info) : (loaded ? 'past' : 'loading');
+        const s = info ? dayState(info) : (loaded ? 'past' : 'loading');
         const off = s === 'past' || s === 'loading';
         const mark = info && info.b ? '<i class="sc-bmark" title="新秘可安排"></i>' : '';
         const nInq = (s === 'inquiry' || s === 'hot') ? inquiryCount(info) : 0;
@@ -1498,6 +1541,9 @@
           '<span class="sc-l"><span class="full">' + (LABEL[s] || '') + '</span><span class="short">' + (SHORT[s] || '') + '</span></span></button>';
       }
       grid.innerHTML = html;
+      const sv = curSvc();
+      grid.classList.toggle('sc-bfocus', !!(sv && sv.bridal));
+      renderFilter();
       if (state.error) {
         statusEl.innerHTML = esc(state.error) + '<button type="button" id="scRetry">重新載入</button>' +
           '<a class="sc-fallback" href="' + esc(SCHEDULE_FALLBACK_FORM) + '" target="_blank" rel="noopener">直接填寫預約表單</a>';
@@ -1520,6 +1566,108 @@
       if (!state.error) prefetchAhead(ym);
     }
 
+    // ============================================================
+    // WEB-B2：服務篩選（只存在頁面記憶體，重新整理回到「全部」）
+    // ============================================================
+    const findSvc = (name) => state.services.find((x) => x.name === name) || null;
+    const curSvc = () => (state.svc ? findSvc(state.svc) : null);
+    const svcAt = (i) => { const x = state.services[+i]; return +i >= 0 && x ? x.name : ''; };
+
+    function setServices(list) {
+      state.services = list.filter((x) => x && typeof x.name === 'string' && x.name).map((x) => ({ name: x.name, bridal: !!x.bridal }));
+      if (state.wantSvc) {
+        const w = state.wantSvc === 'bridal' ? state.services.find((x) => x.bridal) : findSvc(state.wantSvc);
+        state.wantSvc = '';
+        if (w) state.svc = w.name;
+      }
+      if (state.svc && !findSvc(state.svc)) state.svc = '';   // 老師把服務改名或下架 → 回到全部
+    }
+
+    // 某天某服務的可約起始時間（後端把時段相同的服務併成一組）
+    function svcTimes(info, name) {
+      const groups = (info && info.sl) || [];
+      for (let i = 0; i < groups.length; i++) if ((groups[i].svc || []).indexOf(name) >= 0) return groups[i].t || [];
+      return [];
+    }
+
+    // 格子／氣泡框標籤：沒選服務或選新秘＝原本的 viewState；選了一般服務、後端 open 但這項沒時段 → 此項目約滿
+    function dayState(info) {
+      const v = viewState(info);
+      const sv = curSvc();
+      if (!sv || sv.bridal || info.s !== 'open') return v;
+      return svcTimes(info, sv.name).length ? v : 'svcfull';
+    }
+
+    function renderFilter() {
+      if (!filterEl || !fbar) return;
+      const list = state.services;
+      filterEl.hidden = !list.length;
+      const sig = list.map((x) => x.name + (x.bridal ? '*' : '')).join('|');
+      if (sig !== state.filterSig) {   // 服務清單有變才重畫按鈕（避免點按鈕後焦點跑掉）
+        state.filterSig = sig;
+        fbar.innerHTML = '<button type="button" class="sc-fbtn" data-sc-svc="-1">全部</button>' +
+          list.map((x, i) => '<button type="button" class="sc-fbtn" data-sc-svc="' + i + '">' + esc(svcLabel(x.name)) + '</button>').join('');
+      }
+      const sv = curSvc();
+      Array.prototype.forEach.call(fbar.querySelectorAll('[data-sc-svc]'), (b) => {
+        const i = +b.getAttribute('data-sc-svc');
+        b.setAttribute('aria-pressed', String(sv ? state.services[i] === sv : i < 0));
+      });
+      if (fhint) fhint.textContent = !sv ? '' : (sv.bridal ? '金色小圓點＝當天新娘秘書可安排；任何日期都可以點開諮詢' : '月曆顯示「' + svcLabel(sv.name) + '」的檔期，點日期看可預約時段');
+    }
+
+    function setSvc(name) {
+      state.svc = name && findSvc(name) ? name : '';
+      render();
+      if (!state.openDate) return;
+      const info = state.days[state.openDate];
+      if (!info || info.s === 'past') { closePop(); return; }
+      pop.innerHTML = popoverHtml(state.openDate, info);
+      pop.scrollTop = 0;
+      const cell = grid.querySelector ? grid.querySelector('[data-date="' + state.openDate + '"]') : null;
+      if (cell) placePopover(cell);
+    }
+
+    // 從頁面其他地方指定服務（'bridal'＝新秘）；檔期還沒載入就等載入後套用
+    function pickService(key) {
+      start(false);
+      const w = key === 'bridal' ? state.services.find((x) => x.bridal) : findSvc(key);
+      if (w) setSvc(w.name);
+      else state.wantSvc = key;
+    }
+
+    const swapHtml = () => '<button type="button" class="sc-swap" data-sc-svc="-1">換其他項目：全部 ›</button>';
+
+    // 「全部」：每個一般服務一列（時段數・最早時間）；沒有任何服務有時段時回傳空字串
+    function summaryHtml(info, skip) {
+      const list = state.services.filter((x) => !x.bridal && x.name !== skip).map((x) => ({ x: x, t: svcTimes(info, x.name) }));
+      if (!list.some((r) => r.t.length)) return '';
+      return '<div class="sc-sec">可預約項目</div>' + list.map((r) => (r.t.length
+        ? '<button type="button" class="sc-srow" data-sc-svc="' + state.services.indexOf(r.x) + '">' + esc(svcLabel(r.x.name)) +
+          '<span>' + r.t.length + ' 個時段・' + esc(r.t[0]) + ' 起</span><b aria-hidden="true">›</b></button>'
+        : '<div class="sc-srow sc-off">' + esc(svcLabel(r.x.name)) + '<span>本日已滿</span></div>')).join('');
+    }
+
+    // 選了一般服務：上午／下午／晚上，每段 4 欄；🔴 預填用原名 sv.name，不是別名
+    function svcTimesHtml(date, info, sv) {
+      const times = svcTimes(info, sv.name);
+      let h = '<div class="sc-sec">' + esc(svcLabel(sv.name)) + '・可預約時段</div>';
+      if (!times.length) {
+        const others = summaryHtml(info, sv.name);
+        h += '<p class="sc-note">這天「' + esc(svcLabel(sv.name)) + '」已額滿' + (others ? '，以下項目還有空檔：' : '。') + '</p>' + others;
+        return h + swapHtml();
+      }
+      let from = '';
+      DAY_PARTS.forEach((p) => {
+        const part = times.filter((t) => t >= from && t < p.before);
+        from = p.before;
+        if (!part.length) return;
+        h += '<div class="sc-part">' + p.label + '</div><div class="sc-tgrid">' + part.map((t) => '<a class="sc-tchip" target="_blank" rel="noopener" href="' +
+          esc(buildBookingUrl({ date: date, time: t, service: sv.name })) + '">' + esc(t) + '</a>').join('') + '</div>';
+      });
+      return h + swapHtml();
+    }
+
     function dayTitle(date) {
       const dt = new Date(date + 'T12:00:00+08:00');
       return (dt.getMonth() + 1) + ' 月 ' + dt.getDate() + ' 日（' + WD[dt.getDay()] + '）';
@@ -1528,7 +1676,7 @@
     function popoverHtml(date, info) {
       const s = info.s;
       let h = '<div class="sc-pop-head"><div><div class="sc-pop-date" id="scPopTitle">' + dayTitle(date) + '</div>' +
-        '<span class="sc-chip sc-' + viewState(info) + '">' + esc(LABEL[viewState(info)] || '') + '</span></div>' +
+        '<span class="sc-chip sc-' + dayState(info) + '">' + esc(LABEL[dayState(info)] || '') + '</span></div>' +
         '<button type="button" class="sc-x" data-sc-close aria-label="關閉">×</button></div>';
       const myList = mineOn(date);
       if (myList) h += '<div class="sc-mine-box">' + myList.map((x) => '<div><b>⭐ 您的預約</b>・' + esc(MINE_LABEL[x.state] || '') +
@@ -1543,7 +1691,16 @@
         }).join('') + '</ul>';
       }
       const groups = info.sl || [];
-      if (groups.length) {
+      // WEB-B2：選了一般服務 → 只列該服務的時段；選新秘 → 不列時段；「全部」→ 服務摘要。後端沒給 services → 照 B1 的分組顯示
+      const sv = curSvc();
+      const summary = (!sv && groups.length) ? summaryHtml(info, '') : '';
+      if (sv && sv.bridal) {
+        h += swapHtml();
+      } else if (sv) {
+        h += svcTimesHtml(date, info, sv);
+      } else if (summary) {
+        h += summary;
+      } else if (groups.length) {
         h += '<div class="sc-sec">可預約時段</div>' + groups.map((g) =>
           '<div class="sc-group"><div class="sc-svc">' + g.svc.map(esc).join('・') + '</div><div class="sc-times">' +
           g.t.map((t) => '<a class="sc-tchip" target="_blank" rel="noopener" href="' +
@@ -1600,6 +1757,23 @@
     });
     pop.addEventListener('click', (e) => {
       if (e.target && e.target.closest && e.target.closest('[data-sc-close]')) closePop();
+    });
+    // WEB-B2：氣泡框裡點服務摘要的一列＝選這個服務；「換其他項目」＝回到全部
+    pop.addEventListener('click', (e) => {
+      const b = e.target && e.target.closest ? e.target.closest('[data-sc-svc]') : null;
+      if (!b) return;
+      setSvc(svcAt(b.getAttribute('data-sc-svc')));
+      const f = pop.querySelector('.sc-tchip') || pop.querySelector('[data-sc-close]');
+      if (f && f.focus) f.focus();
+    });
+    if (fbar) fbar.addEventListener('click', (e) => {
+      const b = e.target && e.target.closest ? e.target.closest('[data-sc-svc]') : null;
+      if (b) setSvc(svcAt(b.getAttribute('data-sc-svc')));
+    });
+    // WEB-B2（D6）：預約區「預約新娘秘書服務」→ 捲到檔期表（既有的錨點捲動）並選好新秘
+    document.addEventListener('click', (e) => {
+      const a = e.target && e.target.closest ? e.target.closest('[data-sc-pick]') : null;
+      if (a) pickService(a.getAttribute('data-sc-pick'));
     });
     backdrop.addEventListener('click', closePop);
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePop(); });
@@ -1747,7 +1921,7 @@
       openDay(date, cell);
     }
 
-    window.SianSchedule = { state: state, showMonth: showMonth, openDay: openDay, closePop: closePop, start: start, buildBookingUrl: buildBookingUrl, render: render, refresh: refresh, setMine: setMine, focusDate: focusDate };
+    window.SianSchedule = { state: state, showMonth: showMonth, openDay: openDay, closePop: closePop, start: start, buildBookingUrl: buildBookingUrl, render: render, refresh: refresh, setMine: setMine, focusDate: focusDate, setSvc: setSvc, pickService: pickService, svcLabel: svcLabel };
   })();
 
   // ============================================================
